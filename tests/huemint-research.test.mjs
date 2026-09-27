@@ -227,6 +227,16 @@ test('image workflow provides persistent navigation and accessible artwork contr
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
+test('image library stores and displays a compact five-color palette per image', () => {
+  assert.match(appSource, /function computeImageLibraryPalette\(dataUrl\)/);
+  assert.match(appSource, /buildDominantDistinctImagePalette\(samples,5\)/);
+  assert.match(appSource, /dominantPaletteVersion:1/);
+  assert.match(appSource, /function createImageLibraryPaletteStrip\(item\)/);
+  assert.match(appSource, /className="imageLibraryPaletteStrip"/);
+  assert.match(appSource, /card\.appendChild\(createImageLibraryPaletteStrip\(item\)\)/);
+  assert.match(appSource, /#deletedImageLibraryGrid \.imageLibraryPaletteStrip\{opacity:\.58/);
+});
+
 test('recolor controls use one target-aware history and readable mapping rows', () => {
   assert.match(appSource, /id="recolorTargetGolden"[^>]*aria-pressed="true"/);
   assert.match(appSource, /id="recolorTargetMix"[^>]*aria-pressed="false"/);

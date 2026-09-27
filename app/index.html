@@ -2654,6 +2654,26 @@ button{
 #deletedImageLibrarySection.is-empty #deletedImageEmptyHint{display:inline-flex}
 .imageLibraryScanControls{display:flex;gap:6px;align-items:center}
 .imageLibraryScanControls select{min-height:38px;width:auto;padding:6px 30px 6px 10px;font-size:11px;border-radius:10px}
+.imageLibraryPaletteStrip{
+  width:58px;
+  height:8px;
+  margin:0 auto;
+  display:flex;
+  overflow:hidden;
+  border-radius:3px;
+  background:#ebeae5;
+  box-shadow:0 0 0 1px rgba(31,41,51,.08) inset;
+}
+.imageLibraryPaletteStrip span{flex:1 1 20%;height:100%}
+#deletedImageLibraryGrid .imageLibraryPaletteStrip{opacity:.58;filter:saturate(.78)}
+#imageLibraryViewport,#deletedImageLibraryViewport{height:126px!important;min-height:126px!important;max-height:126px!important}
+#imageLibraryGrid,#deletedImageLibraryGrid{height:126px!important;min-height:126px!important;max-height:126px!important}
+#imageLibraryGrid .imageLibraryItem,#deletedImageLibraryGrid .imageLibraryItem{
+  height:102px!important;min-height:102px!important;max-height:102px!important;padding-top:6px!important;
+}
+#imageLibraryGrid .imageLibraryItem img,#deletedImageLibraryGrid .imageLibraryItem img{margin:0 auto 3px!important}
+.imageLibraryCaption{padding:3px 4px 4px!important}
+.imageLibraryMovePlaceholder{height:102px!important;min-height:102px!important;max-height:102px!important}
 #paletteSection,#imageLibrarySection,#recolorSection{scroll-margin-top:62px}
 
 .recolorTargetSwitch{
@@ -8389,7 +8409,83 @@ function normalizeImageFileName(name){
   return String(name||"").trim().toLowerCase();
 }
 
+async function computeImageLibraryPalette(dataUrl){
+  if(!dataUrl) return [];
+  const img=await loadImageFromDataUrl(dataUrl);
+  const samples=sampleImageForPalette(img);
+  if(!samples.length) return [];
+  return buildDominantDistinctImagePalette(samples,5).slice(0,5);
+}
+
+async function persistImageLibraryPalette(id,colors){
+  if(id==null || !colors?.length) return;
+  const db=await openImageLibraryDb();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction(IMAGE_LIBRARY_STORE,"readwrite");
+    const store=tx.objectStore(IMAGE_LIBRARY_STORE);
+    const request=store.get(id);
+    request.onsuccess=()=>{
+      const item=request.result;
+      if(!item) return;
+      item.dominantPalette=colors.slice(0,5);
+      item.dominantPaletteVersion=1;
+      store.put(item);
+    };
+    request.onerror=()=>reject(request.error);
+    tx.oncomplete=resolve;
+    tx.onerror=()=>reject(tx.error);
+  });
+  db.close();
+}
+
+const imageLibraryPaletteJobs=new Map();
+
+function paintImageLibraryPaletteStrip(strip,colors){
+  const safe=(colors||[]).slice(0,5);
+  strip.replaceChildren();
+  strip.classList.toggle("is-loading",!safe.length);
+  strip.setAttribute("aria-label",safe.length
+    ? `Dominant colors: ${safe.map(hex=>hexToRgbText(hex)).join("; ")}`
+    : "Dominant colors loading");
+  safe.forEach(hex=>{
+    const swatch=document.createElement("span");
+    swatch.style.background=hex;
+    swatch.title=hexToRgbText(hex);
+    strip.appendChild(swatch);
+  });
+}
+
+function createImageLibraryPaletteStrip(item){
+  const strip=document.createElement("div");
+  strip.className="imageLibraryPaletteStrip";
+  const saved=Array.isArray(item?.dominantPalette) ? item.dominantPalette.slice(0,5) : [];
+  paintImageLibraryPaletteStrip(strip,saved);
+
+  if(!saved.length && item?.id!=null && item?.dataUrl){
+    let job=imageLibraryPaletteJobs.get(item.id);
+    if(!job){
+      job=computeImageLibraryPalette(item.dataUrl)
+        .then(async colors=>{
+          if(colors.length){
+            item.dominantPalette=[...colors];
+            await persistImageLibraryPalette(item.id,colors);
+          }
+          return colors;
+        })
+        .catch(()=>[])
+        .finally(()=>imageLibraryPaletteJobs.delete(item.id));
+      imageLibraryPaletteJobs.set(item.id,job);
+    }
+    job.then(colors=>{
+      if(strip.isConnected) paintImageLibraryPaletteStrip(strip,colors);
+    });
+  }
+  return strip;
+}
+
 async function saveImageToLibrary(file,dataUrl,duplicateMeta=null,options={}){
+  let dominantPalette=[];
+  try{ dominantPalette=await computeImageLibraryPalette(dataUrl); }catch(_){ dominantPalette=[]; }
   const db=await openImageLibraryDb();
   await new Promise((resolve,reject)=>{
     const tx=db.transaction(IMAGE_LIBRARY_STORE,"readwrite");
@@ -8400,6 +8496,8 @@ async function saveImageToLibrary(file,dataUrl,duplicateMeta=null,options={}){
       dataUrl,
       visualRgbSignature:duplicateMeta?.visualRgbSignature||null,
       visualEdgeHash:duplicateMeta?.visualEdgeHash||null,
+      dominantPalette,
+      dominantPaletteVersion:1,
       deletedAt:null,
       createdAt:Date.now(),
       fileModifiedAt:Number(file.lastModified)||Date.now()
@@ -9356,6 +9454,7 @@ async function renderImageLibrary(options={}){
           $("deletedImageLibraryViewport")?.classList.remove("libraryDropActive");
         });
         card.appendChild(img);
+        card.appendChild(createImageLibraryPaletteStrip(item));
         card.appendChild(caption);
         host.appendChild(card);
       });
@@ -9433,6 +9532,7 @@ async function renderImageLibrary(options={}){
           });
 
           card.appendChild(img);
+          card.appendChild(createImageLibraryPaletteStrip(item));
           card.appendChild(caption);
           deletedHost.appendChild(card);
         });
