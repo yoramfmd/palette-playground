@@ -218,8 +218,7 @@ test('palette list favorites are additive, local, and filterable', () => {
   assert.match(appSource, /class="paletteActionSecondaryRow"/);
   assert.match(appSource, /aria-label="Previous random palette"[^>]*>←<\/button>/);
   assert.match(appSource, /aria-label="Next random palette"[^>]*>→<\/button>/);
-  assert.match(appSource, /deleteButton\.hidden=browsingFavorites/);
-  assert.match(appSource, /favorites-view/);
+  assert.match(appSource, /deleteButton\.textContent=browsingFavorites \? "Delete from library" : "Delete palette"/);
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 

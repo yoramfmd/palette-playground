@@ -1223,12 +1223,6 @@ body.goldenDialogDragging *{
   gap:8px;
   width:100%;
 }
-.paletteActionSecondaryRow.favorites-view{
-  grid-template-columns:1fr;
-}
-.paletteActionSecondaryRow #deletePalette[hidden]{
-  display:none!important;
-}
 #randomPalette{
   font-weight:600;
 }
@@ -2069,11 +2063,80 @@ button{touch-action:manipulation;}
 .huemintLocalStrip{display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:58px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
 .huemintLocalStrip span{display:block;min-width:0}
 .huemintLocalStrip.compact{height:34px;border-radius:8px}
-.huemintLocalFavorites{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:184px;overflow-y:auto;overscroll-behavior:contain;padding:2px 5px 2px 2px;scrollbar-gutter:stable}
-.huemintLocalFavoriteItem{position:relative;min-width:0}
-.huemintLocalFavorite{display:block;width:100%;padding:4px;border:1px solid #d8d5ce;background:#fff;border-radius:10px;cursor:pointer}
-.huemintLocalDelete{position:absolute;top:-5px;right:-5px;width:23px;height:23px;min-height:0;padding:0;border:1px solid #c9c5bf;border-radius:50%;background:#fff;color:#5f5b56;font-size:16px;line-height:20px;box-shadow:0 1px 4px rgba(0,0,0,.16);cursor:pointer;opacity:.88}
-.huemintLocalDelete:hover,.huemintLocalDelete:focus-visible{background:#8b2929;border-color:#8b2929;color:#fff;opacity:1}
+.huemintLocalFavorites{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:184px;overflow-y:auto;overscroll-behavior:contain;padding:3px 7px 3px 3px;scrollbar-gutter:stable}
+.huemintLocalFavoriteItem{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 34px;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  padding:7px;
+  border:1px solid #d9d7d1;
+  border-radius:14px;
+  background:#f1f1ee;
+  transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.huemintLocalFavoriteItem:hover{
+  background:#f7f7f4;
+  border-color:#cbc8c1;
+  box-shadow:0 4px 12px rgba(35,35,31,.06);
+}
+.huemintLocalFavorite{
+  display:block;
+  width:100%;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  border:1px solid #d4d2cc;
+  background:#fff;
+  border-radius:10px!important;
+  box-shadow:0 1px 2px rgba(35,35,31,.04);
+  cursor:pointer;
+}
+.huemintLocalFavorite:hover{border-color:#bdbab3}
+.huemintLocalFavorite .huemintLocalStrip.compact{height:44px;border:0;border-radius:0}
+.huemintLocalDelete{
+  position:relative;
+  width:32px;
+  height:32px;
+  min-height:32px;
+  padding:0;
+  border:1px solid transparent;
+  border-radius:50%!important;
+  background:transparent;
+  color:#6f716f;
+  font-size:0;
+  line-height:1;
+  box-shadow:none;
+  cursor:pointer;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.huemintLocalDelete::before,
+.huemintLocalDelete::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:13px;
+  height:1.5px;
+  border-radius:2px;
+  background:currentColor;
+}
+.huemintLocalDelete::before{transform:translate(-50%,-50%) rotate(45deg)}
+.huemintLocalDelete::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.huemintLocalDelete:hover{
+  background:#963b35;
+  border-color:#963b35;
+  color:#fff;
+  transform:scale(1.04);
+}
+.huemintLocalDelete:focus-visible{
+  background:#fff;
+  border-color:#963b35;
+  color:#963b35;
+  outline:3px solid rgba(150,59,53,.18);
+  outline-offset:2px;
+}
 .huemintLocalEmpty{grid-column:1/-1;padding:10px;border:1px dashed #d8d5ce;border-radius:10px;text-align:center;font-size:11px;color:#8a8781}
 </style>
 
@@ -4930,13 +4993,14 @@ function updatePaletteFavoriteButton(){
   const isSaved=Boolean(item && loadFavoritePaletteIds().has(paletteId(item)));
   const browsingFavorites=$("categoryFilter")?.value===FAVORITE_PALETTES_FILTER;
   const deleteButton=$("deletePalette");
-  const secondaryRow=button.closest(".paletteActionSecondaryRow");
   button.disabled=!item;
   button.classList.toggle("is-saved",isSaved);
   button.textContent=isSaved ? "★ Remove favorite" : "☆ Save favorite";
   button.setAttribute("aria-pressed",String(isSaved));
-  if(deleteButton) deleteButton.hidden=browsingFavorites;
-  secondaryRow?.classList.toggle("favorites-view",browsingFavorites);
+  if(deleteButton){
+    deleteButton.hidden=false;
+    deleteButton.textContent=browsingFavorites ? "Delete from library" : "Delete palette";
+  }
 }
 
 function toggleSelectedPaletteFavorite(){
