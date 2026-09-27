@@ -209,6 +209,18 @@ test('workspace simplification adds safe history, curated discovery, and one dup
   assert.match(appSource, /deletedSection\.classList\.toggle\("is-empty",empty\)/);
 });
 
+test('every palette source is strictly curated for quality and visual duplicates', () => {
+  assert.match(appSource, /function paletteUnorderedDistance\(a,b\)/);
+  assert.match(appSource, /function paletteCanonicalKey\(colors\)/);
+  assert.match(appSource, /function paletteArtDirectionScore/);
+  assert.match(appSource, /function curatePaletteLibrary/);
+  assert.match(appSource, /maxPerCategory:14,nearThreshold:18/);
+  assert.match(appSource, /paletteHasEnoughVisualContrast\(colors\)/);
+  assert.match(generatorSource, /const curateCorpus = records =>/);
+  assert.match(generatorSource, /unorderedPaletteDistance\(candidate, record\) < 0\.055/);
+  assert.match(generatorSource, /if \(kept\.length >= 24\) break/);
+});
+
 test('image workflow provides persistent navigation and accessible artwork controls', () => {
   assert.match(appSource, /class="sidebarQuickNav"/);
   assert.match(appSource, /data-scroll-target="paletteSection"/);

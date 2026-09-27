@@ -1,7 +1,40 @@
 (() => {
-  const corpus = Array.isArray(window.HUEMINT_LOCAL_CORPUS)
+  const rawCorpus = Array.isArray(window.HUEMINT_LOCAL_CORPUS)
     ? window.HUEMINT_LOCAL_CORPUS.filter(record => Array.isArray(record.colors) && record.colors.length >= 2)
     : [];
+  const colorRgb = hex => [1, 3, 5].map(start => parseInt(String(hex).slice(start, start + 2), 16));
+  const colorDistance = (left, right) => Math.hypot(
+    left[0] - right[0], left[1] - right[1], left[2] - right[2]
+  ) / 441.673;
+  const unorderedPaletteDistance = (left, right) => {
+    const a = left.colors.map(colorRgb);
+    const b = right.colors.map(colorRgb);
+    const nearestAverage = (from, to) => from.reduce((sum, color) => (
+      sum + Math.min(...to.map(candidate => colorDistance(color, candidate)))
+    ), 0) / Math.max(1, from.length);
+    return (nearestAverage(a, b) + nearestAverage(b, a)) / 2;
+  };
+  const curateCorpus = records => {
+    const byTemplate = new Map();
+    records.forEach(record => {
+      if (!byTemplate.has(record.template)) byTemplate.set(record.template, []);
+      byTemplate.get(record.template).push(record);
+    });
+    return [...byTemplate.values()].flatMap(group => {
+      const kept = [];
+      const exact = new Set();
+      for (const record of group) {
+        const key = [...new Set(record.colors.map(color => String(color).toUpperCase()))].sort().join('|');
+        if (exact.has(key)) continue;
+        exact.add(key);
+        if (kept.some(candidate => unorderedPaletteDistance(candidate, record) < 0.055)) continue;
+        kept.push(record);
+        if (kept.length >= 24) break;
+      }
+      return kept;
+    });
+  };
+  const corpus = curateCorpus(rawCorpus);
   const catalog = Array.isArray(window.HUEMINT_TEMPLATE_CATALOG)
     ? window.HUEMINT_TEMPLATE_CATALOG.filter(item => corpus.some(record => record.template === item.slug))
     : [];
