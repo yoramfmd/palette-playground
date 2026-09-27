@@ -118,4 +118,7 @@ test('research preview uses only the captured local corpus', () => {
   assert.doesNotMatch(generatorSource, /mixHex/);
   assert.match(generatorSource, /directPaletteForSlots/);
   assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
+  assert.match(generatorSource, /function removeFavorite/);
+  assert.match(appSource, /max-height:184px;overflow-y:auto/);
+  assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);
 });

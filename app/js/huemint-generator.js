@@ -46,6 +46,12 @@
     localStorage.setItem(favoritesKey, JSON.stringify(favorites));
   }
 
+  function removeFavorite(id) {
+    writeFavorites(readFavorites().filter(favorite => favorite.id !== id));
+    renderFavorites();
+    status.textContent = 'Removed palette from Huemint favorites';
+  }
+
   function makeStrip(colors, className = 'huemintLocalStrip') {
     const row = document.createElement('div');
     row.className = className;
@@ -80,13 +86,26 @@
       return;
     }
     favorites.forEach(record => {
+      const item = document.createElement('div');
+      item.className = 'huemintLocalFavoriteItem';
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'huemintLocalFavorite';
       button.title = 'Apply saved Huemint palette';
       button.appendChild(makeStrip(record.colors, 'huemintLocalStrip compact'));
       button.addEventListener('click', () => applyRecord(record, 'Applied saved Huemint favorite'));
-      favoritesBox.appendChild(button);
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'huemintLocalDelete';
+      deleteButton.textContent = '×';
+      deleteButton.title = 'Remove this palette from favorites';
+      deleteButton.setAttribute('aria-label', 'Remove saved Huemint palette');
+      deleteButton.addEventListener('click', event => {
+        event.stopPropagation();
+        removeFavorite(record.id);
+      });
+      item.append(button, deleteButton);
+      favoritesBox.appendChild(item);
     });
   }
 
