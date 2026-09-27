@@ -2634,6 +2634,26 @@ button{
   background:#414345!important;
   color:#fff!important;
 }
+.workspaceHistoryBar{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin:-8px 0 14px;
+}
+.workspaceHistoryBar button{
+  min-height:34px!important;
+  padding:6px 10px!important;
+  border-radius:10px!important;
+  font-size:11px!important;
+  font-weight:600!important;
+}
+.workspaceHistoryBar button:disabled{opacity:.42}
+#deletedImageLibrarySection.is-empty{padding-block:12px}
+#deletedImageLibrarySection.is-empty .deletedImageLibraryBody{display:none}
+#deletedImageEmptyHint{display:none;color:#858b92;font-size:10px;margin-left:auto}
+#deletedImageLibrarySection.is-empty #deletedImageEmptyHint{display:inline-flex}
+.imageLibraryScanControls{display:flex;gap:6px;align-items:center}
+.imageLibraryScanControls select{min-height:38px;width:auto;padding:6px 30px 6px 10px;font-size:11px;border-radius:10px}
 #paletteSection,#imageLibrarySection,#recolorSection{scroll-margin-top:62px}
 
 .recolorTargetSwitch{
@@ -2778,13 +2798,17 @@ button{
 <body>
 <div class="app">
 <aside class="side">
-<div class="sub">Upload any SVG of your own into a fresh white workspace, then browse a large palette library where every palette is expanded to 10 colors. The artwork stays fixed on the right while controls scroll on the left. You can also hold <span class="hotkey">Space</span> to keep shuffling, similar to Coolors.</div>
+<div class="sub">Choose a source, build a palette, recolor the artwork, and export.</div>
 
 <nav class="sidebarQuickNav" aria-label="Quick workspace navigation">
   <button type="button" class="is-current" data-scroll-target="paletteSection" aria-current="true">Palette</button>
   <button type="button" data-scroll-target="imageLibrarySection">Images</button>
   <button type="button" data-scroll-target="recolorSection">Recolor</button>
 </nav>
+<div class="workspaceHistoryBar" role="group" aria-label="Workspace history">
+  <button id="workspaceUndo" class="secondary" type="button" disabled aria-label="Undo last workspace change">↶ Undo</button>
+  <button id="workspaceRedo" class="secondary" type="button" disabled aria-label="Redo last workspace change">Redo ↷</button>
+</div>
 
 <section class="sec" id="paletteSection">
 <div class="tt">Palette</div>
@@ -2918,8 +2942,13 @@ button{
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input id="imageLibraryAddInput" type="file" accept="image/*" multiple style="display:none">
         <button id="imageLibraryAddBtn" class="secondary" type="button" title="Choose multiple images and add them directly to Image Library">Add images</button>
-        <button id="scanImageDuplicatesBtn" class="secondary" type="button" title="Scan the current Image Library for exact and near-identical duplicate images">Scan library</button>
-        <button id="scanAllImageDuplicatesBtn" class="secondary" type="button" title="Scan both Image Library and Deleted Images for exact and near-identical duplicate images">Scan library + deleted</button>
+        <div class="imageLibraryScanControls">
+          <select id="scanImageScope" aria-label="Duplicate scan scope" title="Choose where to scan for duplicate images">
+            <option value="active">Library only</option>
+            <option value="all">Library + deleted</option>
+          </select>
+          <button id="scanImageDuplicatesBtn" class="secondary" type="button" title="Scan for exact and near-identical duplicate images">Scan duplicates</button>
+        </div>
         <button id="connectDesktopBackup" class="secondary" type="button">Connect Desktop folder</button>
         <span id="desktopBackupStatus" class="imageLibrarySub" style="margin-left:8px;">Desktop backup not connected</span>
       </div>
@@ -2941,13 +2970,15 @@ button{
   </div>
 
 
-  <div class="imageLibraryBox" style="margin-top:12px">
+  <div class="imageLibraryBox" id="deletedImageLibrarySection" style="margin-top:12px">
     <div class="imageLibraryHeader">
       <div>
         <div class="comparePaletteLabel">Deleted images</div>
         <div class="imageLibrarySub">Drag an image back to Image Library to restore it. Deleted names still block re-upload.</div>
       </div>
+      <span id="deletedImageEmptyHint">Empty</span>
     </div>
+    <div class="deletedImageLibraryBody">
     <div id="deletedImageLibraryViewport">
       <div id="deletedImageLibraryGrid" class="imageLibraryGrid"></div>
     </div>
@@ -2960,6 +2991,7 @@ button{
         <button id="deletedImageLibraryClearSelection" type="button" class="secondary" title="Clear current selection">Clear selection</button>
         <button id="deletedImageLibraryDeleteSelection" type="button" class="secondary" title="Permanently delete selected images">Delete selected</button>
       </div>
+    </div>
     </div>
   </div>
 </div>
@@ -2976,7 +3008,7 @@ button{
   <div class="paletteManageActions">
     <button id="applySelected" class="secondary">Use selected palette</button>
     <div class="paletteActionOneRow">
-      <button id="randomPalette" class="secondary">Random palette</button>
+      <button id="randomPalette" class="secondary" title="Choose a random palette from the current library filter">Random library palette</button>
       <button id="randomPaletteBack" class="secondary" type="button" aria-label="Previous random palette" title="Previous random palette" disabled>←</button>
       <button id="randomPaletteForward" class="secondary" type="button" aria-label="Next random palette" title="Next random palette" disabled>→</button>
     </div>
@@ -2989,8 +3021,8 @@ button{
 </div>
 <div class="note">Delete palette removes the currently selected palette from your list. Deleted palettes are remembered on this browser.</div>
 <div class="note hideClean">Keyboard: <span class="hotkey">↑</span> previous palette · <span class="hotkey">↓</span> next palette</div>
-<div class="note">Full palette library restored. No palettes are removed for neon, brightness, darkness, saturation, or similarity. Only the Artist category is reduced to one palette per repeated color family. Adobe Explore is a dedicated Adobe category in the palette list. Fluorescent, neon, electric, and overly vivid Adobe palettes are excluded. All Illustrator ASE swatch libraries from your ZIP are included directly in the Palette list under Illustrator categories.</div>
-<div class="note" id="libraryStatus">Built-in gallery, museum, Adobe Explore, and Illustrator swatch palettes are ready. Loading the online 1,000-palette public library, each expanded to 10 colors…</div>
+<div class="note">Start with Recommended; use All categories when you need the complete archive.</div>
+<div class="note" id="libraryStatus">Loading the complete palette archive…</div>
 </section>
 
 
@@ -3334,6 +3366,9 @@ let activeReplaceView="recommended";
 const recentReplaceColors={golden:[],mix:[]};
 let shuffleHistory=[], shuffleHistoryIndex=-1; // MIXES history
 let goldenShuffleHistory=[], goldenShuffleHistoryIndex=-1;
+let workspaceUndoStack=[],workspaceRedoStack=[];
+let workspaceHistoryReady=false;
+let workspaceHistoryRestoring=false;
 let activeRecolorTarget="golden";
 let imageOriginalMap=null;
 let highlightedSource=null;
@@ -4133,6 +4168,7 @@ function renderCurrentMixPaletteRow(){
 
 function applyMixReplacementByIndex(index, hex){
   if(index<0 || index>=getPaletteSlotCount()) return;
+  recordWorkspaceUndo("MIX color replacement");
   manualMixOverrides.set(index, hex);
   const basis=imagePaletteMap || new Map(sourceColors.map(src=>[src,src]));
   goldenApproxMap=buildGoldenApproxMapFromImageMap(basis);
@@ -4143,6 +4179,7 @@ function applyMixReplacementByIndex(index, hex){
 
 function resetMixReplacementByIndex(index){
   if(index<0 || index>=getPaletteSlotCount()) return;
+  recordWorkspaceUndo("automatic MIX match");
   manualMixOverrides.delete(index);
   const basis=imagePaletteMap || new Map(sourceColors.map(src=>[src,src]));
   goldenApproxMap=buildGoldenApproxMapFromImageMap(basis);
@@ -4180,6 +4217,7 @@ function refreshGoldenArtworkAfterPaletteEdit(){
 
 
 function restoreGoldenPaletteToCurrentSource(){
+  recordWorkspaceUndo("restore GOLDEN colors");
   manualGoldenOverrides.clear();
 
   const basis=imagePaletteMap || new Map(sourceColors.map(src=>[src,src]));
@@ -4196,6 +4234,7 @@ function restoreGoldenPaletteToCurrentSource(){
 }
 
 function restoreMixPaletteToCurrentSource(){
+  recordWorkspaceUndo("restore MIX colors");
   manualMixOverrides.clear();
 
   const basis=imagePaletteMap || new Map(sourceColors.map(src=>[src,src]));
@@ -4419,6 +4458,7 @@ function closeGoldenReplaceDialog(){
 
 function applyGoldenReplacementByIndex(index, hex){
   if(index<0 || index>=getPaletteSlotCount()) return;
+  recordWorkspaceUndo("GOLDEN color replacement");
   manualGoldenOverrides.set(index, hex);
   refreshGoldenArtworkAfterPaletteEdit();
   $("status").textContent=`Replaced only GOLDEN palette slot ${index+1}.`;
@@ -4426,6 +4466,7 @@ function applyGoldenReplacementByIndex(index, hex){
 
 function resetGoldenReplacementByIndex(index){
   if(index<0 || index>=getPaletteSlotCount()) return;
+  recordWorkspaceUndo("automatic GOLDEN match");
   manualGoldenOverrides.delete(index);
   refreshGoldenArtworkAfterPaletteEdit();
   $("status").textContent=`Reset only GOLDEN palette slot ${index+1} to automatic matching.`;
@@ -5203,7 +5244,7 @@ function filterReadablePalettes(list){
 
 async function loadExternalPaletteLibrary(){
   const status=$("libraryStatus");
-  status.textContent="Loading 1,000 real palettes from the nice-color-palettes library…";
+  status.textContent="Loading the complete palette archive…";
   try{
     const res=await fetch("https://raw.githubusercontent.com/Experience-Monks/nice-color-palettes/master/1000.json",{cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
@@ -5219,11 +5260,11 @@ async function loadExternalPaletteLibrary(){
     applyDeletedPaletteFilter();
     populateCategoryFilter();
     buildPaletteSelect();
-    status.textContent=`Loaded ${external.length} online public palettes + ${BASE_PRESETS.length} built-in curated studio, museum and artist palettes = ${ALL_PALETTES.length} total. Every palette is automatically expanded to 10 colors. Near-duplicates, overly pale palettes, neon/electric palettes, and overly vivid high-saturation palettes are filtered out so the artwork stays calm, readable, and gallery-oriented. Browse by category, then step through with the arrow keys.`;
+    status.textContent=`${ALL_PALETTES.length} palettes ready · Recommended collection available.`;
   }catch(err){
     ALL_PALETTES=[...filterReadablePalettes(normalizePaletteLibrary(BASE_PRESETS)),...normalizePaletteLibrary(GOLDEN_HEAVY_BODY_PRESETS)];
     buildPaletteSelect();
-    status.textContent=`Could not load the online 1,000-palette library (${err.message}). The built-in high-contrast palettes still work, each expanded to 10 colors. Check your internet connection, then click “Reload online palettes”.`;
+    status.textContent=`Online archive unavailable. ${BASE_PRESETS.length} built-in palettes are ready.`;
   }
 }
 
@@ -5231,6 +5272,7 @@ async function loadExternalPaletteLibrary(){
 const DELETED_PALETTES_KEY="palettePlaygroundDeletedPalettesV1";
 const FAVORITE_PALETTES_KEY="palettePlaygroundListFavoritesV1";
 const FAVORITE_PALETTES_FILTER="__favorites";
+const RECOMMENDED_PALETTES_FILTER="__recommended";
 
 function paletteId(item){
   const [name,category,colors]=item;
@@ -5413,6 +5455,34 @@ function paletteMatchesSelectedCategory(category,colors,selectedCategory){
   return category===selectedCategory;
 }
 
+function recommendedPaletteIndexSet(limit=48){
+  const scored=ALL_PALETTES.map(([name,category,colors],index)=>{
+    const metrics=(colors||[]).map(hex=>{
+      const [r,g,b]=rgb(hex);
+      const [h,s,l]=rgbToHslFull(r,g,b);
+      return {h,s,l};
+    });
+    const lightness=metrics.map(value=>value.l);
+    const range=lightness.length ? Math.max(...lightness)-Math.min(...lightness) : 0;
+    const averageSaturation=metrics.length ? metrics.reduce((sum,value)=>sum+value.s,0)/metrics.length : 1;
+    const families=new Set(paletteColorFamilies(colors));
+    const trusted=/Adobe|Artist|Bauhaus|Museum|Golden|Illustrator/i.test(category) ? 8 : 0;
+    const balancePenalty=Math.max(0,averageSaturation-.78)*45 + Math.max(0,.30-range)*50;
+    return {index,category,score:families.size*9+range*42+trusted-balancePenalty};
+  }).sort((a,b)=>b.score-a.score);
+
+  const selected=new Set();
+  const categoryCounts=new Map();
+  for(const item of scored){
+    if(selected.size>=limit) break;
+    const count=categoryCounts.get(item.category)||0;
+    if(count>=6) continue;
+    selected.add(item.index);
+    categoryCounts.set(item.category,count+1);
+  }
+  return selected;
+}
+
 function populateCategoryFilter(){
   const filter=$("categoryFilter");
   const current=filter.value||"All";
@@ -5436,6 +5506,11 @@ function populateCategoryFilter(){
   favoritesOpt.textContent=`★ Favorites (${favoriteCount})`;
   filter.appendChild(favoritesOpt);
 
+  const recommendedOpt=document.createElement("option");
+  recommendedOpt.value=RECOMMENDED_PALETTES_FILTER;
+  recommendedOpt.textContent=`Recommended (${Math.min(48,ALL_PALETTES.length)})`;
+  filter.appendChild(recommendedOpt);
+
   const colorGroup=document.createElement("optgroup");
   colorGroup.label="By color";
   availableColorCats.forEach(fam=>{
@@ -5456,7 +5531,7 @@ function populateCategoryFilter(){
   });
   filter.appendChild(styleGroup);
 
-  const validValues=["All",FAVORITE_PALETTES_FILTER,...styleCats,...availableColorCats.map(c=>"color:"+c)];
+  const validValues=["All",FAVORITE_PALETTES_FILTER,RECOMMENDED_PALETTES_FILTER,...styleCats,...availableColorCats.map(c=>"color:"+c)];
   filter.value=validValues.includes(current)?current:"All";
 }
 function buildPaletteSelect(){
@@ -5464,6 +5539,7 @@ function buildPaletteSelect(){
   const filter=$("categoryFilter");
   const selectedCategory = filter ? (filter.value||"All") : "All";
   const favoriteIds=loadFavoritePaletteIds();
+  const recommendedIndexes=selectedCategory===RECOMMENDED_PALETTES_FILTER ? recommendedPaletteIndexSet() : null;
   const previousValue=select.value;
   select.innerHTML="";
   const byCat={};
@@ -5471,6 +5547,8 @@ function buildPaletteSelect(){
     const item=ALL_PALETTES[idx];
     if(selectedCategory===FAVORITE_PALETTES_FILTER){
       if(!favoriteIds.has(paletteId(item))) return;
+    }else if(selectedCategory===RECOMMENDED_PALETTES_FILTER){
+      if(!recommendedIndexes.has(idx)) return;
     }else if(!paletteMatchesSelectedCategory(category,colors,selectedCategory)) return;
     if(!byCat[category]) byCat[category]=[];
     byCat[category].push([name,category,colors,idx]);
@@ -5616,6 +5694,7 @@ function resizeDirectPaletteColors(colors,targetCount){
 }
 
 function applyListPaletteToAllThreeWindows(colors,options={}){
+  if(options.recordUndo!==false) recordWorkspaceUndo("palette change");
   const slotCount=getPaletteSlotCount();
   const directColors=(colors||[]).map(color=>String(color).toUpperCase()).filter(Boolean);
   const nextOriginalHexes=options.direct && directColors.length
@@ -6253,6 +6332,132 @@ function cloneColorMap(M){
   return new Map(M ? [...M.entries()] : []);
 }
 
+function cloneColorMapHistory(history){
+  return (history||[]).map(map=>cloneColorMap(map));
+}
+
+function captureWorkspaceSnapshot(label="Workspace change"){
+  return {
+    label,
+    imagePaletteHexes:[...imagePaletteHexes],
+    goldenMatchHexes:[...goldenMatchHexes],
+    goldenPreviewHexes:[...goldenPreviewHexes],
+    mixPreviewHexes:[...mixPreviewHexes],
+    automaticGoldenSlotHexes:[...automaticGoldenSlotHexes],
+    automaticMixSlotHexes:[...automaticMixSlotHexes],
+    palette:[...palette],
+    imagePaletteMap:cloneColorMap(imagePaletteMap),
+    goldenApproxMap:cloneColorMap(goldenApproxMap),
+    cleanGoldenMap:cloneColorMap(cleanGoldenMap),
+    mixBaseMap:cloneColorMap(mixBaseMap),
+    lastMap:cloneColorMap(lastMap),
+    goldenVisibleMap:cleanOnlySvg ? cloneColorMap(currentCleanOnlyMap()) : new Map(),
+    manualGoldenOverrides:cloneColorMap(manualGoldenOverrides),
+    manualMixOverrides:cloneColorMap(manualMixOverrides),
+    shuffleHistory:cloneColorMapHistory(shuffleHistory),
+    shuffleHistoryIndex,
+    goldenShuffleHistory:cloneColorMapHistory(goldenShuffleHistory),
+    goldenShuffleHistoryIndex,
+    imagePaletteCount,
+    paletteSourceMode,
+    activeListPaletteSourceColors:[...activeListPaletteSourceColors],
+    activeListPaletteDirect,
+    categoryValue:$("categoryFilter")?.value||"All",
+    paletteValue:$("paletteSelect")?.value||"",
+    lightness:Number($("lightnessSlider")?.value||0)
+  };
+}
+
+function updateWorkspaceHistoryButtons(){
+  const undo=$("workspaceUndo"),redo=$("workspaceRedo");
+  if(undo){
+    undo.disabled=!workspaceUndoStack.length;
+    undo.title=workspaceUndoStack.length ? `Undo ${workspaceUndoStack[workspaceUndoStack.length-1].label}` : "Nothing to undo";
+  }
+  if(redo){
+    redo.disabled=!workspaceRedoStack.length;
+    redo.title=workspaceRedoStack.length ? `Redo ${workspaceRedoStack[workspaceRedoStack.length-1].label}` : "Nothing to redo";
+  }
+}
+
+function recordWorkspaceUndo(label){
+  if(!workspaceHistoryReady || workspaceHistoryRestoring || !sourceColors.length) return;
+  workspaceUndoStack.push(captureWorkspaceSnapshot(label));
+  if(workspaceUndoStack.length>40) workspaceUndoStack.shift();
+  workspaceRedoStack=[];
+  updateWorkspaceHistoryButtons();
+}
+
+function restoreWorkspaceSnapshot(snapshot,direction){
+  if(!snapshot) return;
+  workspaceHistoryRestoring=true;
+  try{
+    imagePaletteHexes=[...snapshot.imagePaletteHexes];
+    goldenMatchHexes=[...snapshot.goldenMatchHexes];
+    goldenPreviewHexes=[...snapshot.goldenPreviewHexes];
+    mixPreviewHexes=[...snapshot.mixPreviewHexes];
+    automaticGoldenSlotHexes=[...snapshot.automaticGoldenSlotHexes];
+    automaticMixSlotHexes=[...snapshot.automaticMixSlotHexes];
+    palette=[...snapshot.palette];
+    imagePaletteMap=cloneColorMap(snapshot.imagePaletteMap);
+    goldenApproxMap=cloneColorMap(snapshot.goldenApproxMap);
+    cleanGoldenMap=cloneColorMap(snapshot.cleanGoldenMap);
+    mixBaseMap=cloneColorMap(snapshot.mixBaseMap);
+    lastMap=cloneColorMap(snapshot.lastMap);
+    manualGoldenOverrides=cloneColorMap(snapshot.manualGoldenOverrides);
+    manualMixOverrides=cloneColorMap(snapshot.manualMixOverrides);
+    shuffleHistory=cloneColorMapHistory(snapshot.shuffleHistory);
+    shuffleHistoryIndex=snapshot.shuffleHistoryIndex;
+    goldenShuffleHistory=cloneColorMapHistory(snapshot.goldenShuffleHistory);
+    goldenShuffleHistoryIndex=snapshot.goldenShuffleHistoryIndex;
+    imagePaletteCount=snapshot.imagePaletteCount;
+    paletteSourceMode=snapshot.paletteSourceMode;
+    activeListPaletteSourceColors=[...snapshot.activeListPaletteSourceColors];
+    activeListPaletteDirect=snapshot.activeListPaletteDirect;
+
+    if($("imagePaletteValue")) $("imagePaletteValue").textContent=String(imagePaletteCount);
+    if($("categoryFilter")){
+      $("categoryFilter").value=snapshot.categoryValue;
+      buildPaletteSelect();
+    }
+    if($("paletteSelect")?.querySelector(`option[value="${snapshot.paletteValue}"]`)) $("paletteSelect").value=snapshot.paletteValue;
+
+    if(imagePaletteMap.size) renderMappedArtworkToHostExact("hostImageCompare",cloneColorMap(imagePaletteMap));
+    if(snapshot.goldenVisibleMap?.size) renderMappedArtworkToHostExact("hostCleanOnly",cloneColorMap(snapshot.goldenVisibleMap));
+    else if(cleanGoldenMap.size) renderMappedArtworkToHostExact("hostCleanOnly",cloneColorMap(cleanGoldenMap));
+    if(lastMap.size) applyMap(cloneColorMap(lastMap),{keepShuffleHistory:true,skipManualMixBaseUpdate:true});
+    renderComparePalettes();
+    renderPalette();
+    updateRandomPaletteHistoryButtons();
+    updateRecolorControls();
+    updatePaletteFavoriteButton();
+    resetLightnessBases();
+    if(snapshot.lightness){
+      $("lightnessSlider").value=String(snapshot.lightness);
+      $("lightnessValue").textContent=snapshot.lightness>0 ? `Darker ${snapshot.lightness}` : `Lighter ${Math.abs(snapshot.lightness)}`;
+      applyLightnessShift(snapshot.lightness);
+    }
+    $("status").textContent=`${direction}: ${snapshot.label}.`;
+  }finally{
+    workspaceHistoryRestoring=false;
+    updateWorkspaceHistoryButtons();
+  }
+}
+
+function undoWorkspaceChange(){
+  if(!workspaceUndoStack.length) return;
+  const snapshot=workspaceUndoStack.pop();
+  workspaceRedoStack.push(captureWorkspaceSnapshot(snapshot.label));
+  restoreWorkspaceSnapshot(snapshot,"Undid");
+}
+
+function redoWorkspaceChange(){
+  if(!workspaceRedoStack.length) return;
+  const snapshot=workspaceRedoStack.pop();
+  workspaceUndoStack.push(captureWorkspaceSnapshot(snapshot.label));
+  restoreWorkspaceSnapshot(snapshot,"Redid");
+}
+
 function updateShuffleHistoryButtons(){
   updateRecolorControls();
 }
@@ -6302,6 +6507,7 @@ function resetActiveRecolorMapping(){
       $("status").textContent="GOLDEN mapping is already at its first state.";
       return;
     }
+    recordWorkspaceUndo("GOLDEN mapping reset");
     goldenShuffleHistoryIndex=0;
     renderGoldenShuffleMap(cloneColorMap(goldenShuffleHistory[0]));
     updateGoldenShuffleHistoryButtons();
@@ -6312,6 +6518,7 @@ function resetActiveRecolorMapping(){
     $("status").textContent="MIXES mapping is already at its first state.";
     return;
   }
+  recordWorkspaceUndo("MIXES mapping reset");
   shuffleHistoryIndex=0;
   applyMap(cloneColorMap(shuffleHistory[0]),{keepShuffleHistory:true});
   updateShuffleHistoryButtons();
@@ -7764,6 +7971,7 @@ function renderGoldenShuffleMap(M){
 
 function goldenShuffleOnce(){
   if(!cleanOnlySvg || !sourceColors.length) return;
+  recordWorkspaceUndo("GOLDEN shuffle");
 
   if(goldenShuffleHistoryIndex<0){
     goldenShuffleHistory=[cloneColorMap(currentCleanOnlyMap())];
@@ -7821,6 +8029,7 @@ function buildShuffleMapUsingAllGoldenColors(){
 
 function shuffleOnce(){
   if(!svg || !palette.length) return;
+  recordWorkspaceUndo("MIX shuffle");
 
   // Start the history with whatever is currently on screen so Back can
   // recover the exact state that existed before the first Shuffle.
@@ -9050,6 +9259,12 @@ async function renderImageLibrary(options={}){
     const deletedItems=await getImageLibraryItems("deleted");
     activeLibraryItemsCache=[...activeItems];
     deletedLibraryItemsCache=[...deletedItems];
+    const deletedSection=$("deletedImageLibrarySection");
+    if(deletedSection){
+      const empty=deletedItems.length===0;
+      deletedSection.classList.toggle("is-empty",empty);
+      deletedSection.querySelector(".deletedImageLibraryBody")?.setAttribute("aria-hidden",String(empty));
+    }
     host.replaceChildren();
     if(deletedHost) deletedHost.replaceChildren();
     if(removedDuplicates>0){
@@ -9735,6 +9950,7 @@ document.addEventListener("keydown",e=>{
 });
 
 $("mode").onchange=()=>{
+  recordWorkspaceUndo("mapping method change");
   const mode=$("mode").value;
   const help={
     light:"Maps the lightest artwork color to the lightest palette color. Changes appear in the live preview.",
@@ -9796,6 +10012,17 @@ setRecolorTarget("golden");
 $("exportSvg").onclick=exportSvg;
 $("exportPng").onclick=exportPng;
 
+$("workspaceUndo").onclick=undoWorkspaceChange;
+$("workspaceRedo").onclick=redoWorkspaceChange;
+document.addEventListener("keydown",e=>{
+  if(!(e.metaKey||e.ctrlKey) || String(e.key).toLowerCase()!=="z") return;
+  if(isLibraryKeyboardNavigationBlocked()) return;
+  e.preventDefault();
+  if(e.shiftKey) redoWorkspaceChange();
+  else undoWorkspaceChange();
+});
+
+$("lightnessSlider").addEventListener("pointerdown",()=>recordWorkspaceUndo("lightness change"));
 $("lightnessSlider").addEventListener("input", e=>{
   const v=parseInt(e.target.value,10)||0;
   $("lightnessValue").textContent = v===0 ? "0" : (v>0 ? `Darker ${v}` : `Lighter ${Math.abs(v)}`);
@@ -9803,6 +10030,7 @@ $("lightnessSlider").addEventListener("input", e=>{
 });
 $("resetLightness").onclick=()=>{
   if(!svg) return;
+  if(Number($("lightnessSlider").value||0)!==0) recordWorkspaceUndo("reset lightness");
   [...svg.querySelectorAll("*")].forEach(node=>{
     const base=node.dataset && node.dataset.baseLightFill;
     if(base) node.style.setProperty("fill", base, "important");
@@ -9810,6 +10038,11 @@ $("resetLightness").onclick=()=>{
   $("lightnessSlider").value="0";
   $("lightnessValue").textContent="0";
 };
+
+document.addEventListener("DOMContentLoaded",()=>{
+  workspaceHistoryReady=true;
+  updateWorkspaceHistoryButtons();
+});
 
 
 
@@ -10087,6 +10320,7 @@ function openDuplicateScanner(scope='active'){
   window.duplicateScannerScope=scope || 'active';
   const overlay=$("duplicateScannerOverlay");
   if(!overlay) return;
+  if($("duplicateScannerScope")) $("duplicateScannerScope").value=window.duplicateScannerScope;
   overlay.classList.add("open");
   overlay.setAttribute("aria-hidden","false");
   runImageDuplicateScan(window.duplicateScannerScope);
@@ -10461,9 +10695,7 @@ async function moveScannerDuplicateToDeleted(idx){
 
 document.addEventListener("DOMContentLoaded",()=>{
   const btn=$("scanImageDuplicatesBtn");
-  const allBtn=$("scanAllImageDuplicatesBtn");
-  if(btn) btn.addEventListener("click",()=>openDuplicateScanner('active'));
-  if(allBtn) allBtn.addEventListener("click",()=>openDuplicateScanner('all'));
+  if(btn) btn.addEventListener("click",()=>openDuplicateScanner($("scanImageScope")?.value||'active'));
 });
 
 document.addEventListener("keydown",e=>{
@@ -10750,8 +10982,14 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
     </div>
 
     <div id="duplicateScannerToolbar">
-      <button id="duplicateScannerRun" class="secondary" type="button" onclick="runImageDuplicateScan('active')">Scan library</button>
-      <button id="duplicateScannerRunAll" class="secondary" type="button" onclick="runImageDuplicateScan('all')">Scan library + deleted</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px">
+        Scope
+        <select id="duplicateScannerScope" style="min-height:32px;padding:4px 7px">
+          <option value="active">Image Library</option>
+          <option value="all">Image Library + Deleted</option>
+        </select>
+      </label>
+      <button id="duplicateScannerRun" class="secondary" type="button" onclick="runImageDuplicateScan($('duplicateScannerScope')?.value||'active')">Scan again</button>
       <label style="display:flex;align-items:center;gap:6px;font-size:11px">
         Similarity
         <select id="duplicateScannerSensitivity" onchange="if(duplicateScannerRows.length) runImageDuplicateScan(window.duplicateScannerScope||'active')" style="min-height:32px;padding:4px 7px">

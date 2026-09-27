@@ -193,6 +193,22 @@ test('design polish keeps layout responsive and interaction state local', () => 
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
+test('workspace simplification adds safe history, curated discovery, and one duplicate scan path', () => {
+  assert.match(appSource, /id="workspaceUndo"[^>]*disabled/);
+  assert.match(appSource, /id="workspaceRedo"[^>]*disabled/);
+  assert.match(appSource, /function captureWorkspaceSnapshot/);
+  assert.match(appSource, /function undoWorkspaceChange/);
+  assert.match(appSource, /function redoWorkspaceChange/);
+  assert.match(appSource, /workspaceUndoStack\.length>40/);
+  assert.match(appSource, /RECOMMENDED_PALETTES_FILTER="__recommended"/);
+  assert.match(appSource, /function recommendedPaletteIndexSet\(limit=48\)/);
+  assert.match(appSource, /id="scanImageScope"/);
+  assert.match(appSource, /id="scanImageDuplicatesBtn"[^>]*>Scan duplicates<\/button>/);
+  assert.doesNotMatch(appSource, /id="scanAllImageDuplicatesBtn"/);
+  assert.match(appSource, /id="deletedImageLibrarySection"/);
+  assert.match(appSource, /deletedSection\.classList\.toggle\("is-empty",empty\)/);
+});
+
 test('image workflow provides persistent navigation and accessible artwork controls', () => {
   assert.match(appSource, /class="sidebarQuickNav"/);
   assert.match(appSource, /data-scroll-target="paletteSection"/);
