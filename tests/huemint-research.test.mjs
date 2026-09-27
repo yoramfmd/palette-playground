@@ -172,8 +172,8 @@ test('app typography follows Huemint Roboto styling including controls', () => {
 });
 
 test('local palette controls follow Huemint button treatment', () => {
-  assert.match(appSource, /#huemintLocalGenerate::after\{content:"→"/);
-  assert.match(appSource, /#huemintLocalBack,#huemintLocalForward\{width:46px/);
+  assert.match(appSource, /#huemintLocalGenerate::after\{content:none/);
+  assert.match(appSource, /#huemintLocalBack,#huemintLocalForward\{width:40px/);
   assert.match(appSource, /id="huemintLocalBack"[^>]+aria-label="Previous palette"[^>]*>←<\/button>/);
   assert.match(appSource, /id="huemintLocalForward"[^>]+aria-label="Next palette"[^>]*>→<\/button>/);
 });
