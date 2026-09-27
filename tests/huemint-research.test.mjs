@@ -315,8 +315,13 @@ test('replacement dialogs prioritize recommendations and keep the full catalog m
 });
 
 test('palette matching controls remove the duplicate mode and group advanced choices', () => {
-  assert.match(appSource, /<option value="original" selected>Dominant Colors<\/option>/);
-  assert.match(appSource, /<option value="keyColors">Distinct Key Colors<\/option>/);
+  assert.match(appSource, /<option value="original">Dominant Colors<\/option>/);
+  assert.match(appSource, /<option value="keyColors" selected>Distinct Key Colors<\/option>/);
+  assert.match(appSource, /<option value="balanced" selected>Balanced<\/option>/);
+  assert.match(appSource, /<option value="balanced" selected>Balanced · controlled harmony<\/option>/);
+  assert.match(appSource, /firstBuild \? RECOMMENDED_PALETTES_FILTER/);
+  assert.match(appSource, /imageModeSelect\.value="keyColors"/);
+  assert.match(appSource, /restoreGoldenMatchingMode\("balanced"\)/);
   assert.match(appSource, /<optgroup label="Recommended">/);
   assert.match(appSource, /<optgroup label="Advanced">/);
   assert.doesNotMatch(appSource, /<option value="perceptualOnly">/);

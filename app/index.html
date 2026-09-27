@@ -2858,14 +2858,14 @@ button{
   <div class="imagePaletteMeta" id="imagePaletteMeta">Use Add images in Image Library to add one or many images.</div>
 <label style="margin-top:10px">Image palette mode</label>
   <select id="imagePaletteMode">
-    <option value="original" selected>Dominant Colors</option>
-    <option value="keyColors">Distinct Key Colors</option>
+    <option value="original">Dominant Colors</option>
+    <option value="keyColors" selected>Distinct Key Colors</option>
   </select>
 <label style="margin-top:10px">GOLDEN + MIXES matching mode</label>
   <select id="goldenMatchMode">
     <optgroup label="Recommended">
-      <option value="original" selected>Original</option>
-      <option value="balanced">Balanced</option>
+      <option value="original">Original</option>
+      <option value="balanced" selected>Balanced</option>
       <option value="contrastBold">Contrast / Bold</option>
       <option value="lightnessFirst">Lightness First</option>
       <option value="warmCoolPreserve">Warm / Cool Preserve</option>
@@ -2932,8 +2932,8 @@ button{
     <div class="huemintLocalMode">
       <label for="huemintLocalMode">Generation style</label>
       <select id="huemintLocalMode">
-        <option value="creative" selected>Creative · varied hues</option>
-        <option value="balanced">Balanced · controlled harmony</option>
+        <option value="creative">Creative · varied hues</option>
+        <option value="balanced" selected>Balanced · controlled harmony</option>
         <option value="bold">Bold · strong contrast</option>
         <option value="any">Any · explore the collection</option>
       </select>
@@ -4175,7 +4175,7 @@ function findImagePaletteSlotForMappedHex(hex){
 
 function preserveGoldenMatchingMode(){
   const el=$("goldenMatchMode");
-  return el ? el.value : "original";
+  return el ? el.value : "balanced";
 }
 
 function restoreGoldenMatchingMode(value){
@@ -5575,7 +5575,9 @@ function recommendedPaletteIndexSet(limit=48){
 
 function populateCategoryFilter(){
   const filter=$("categoryFilter");
-  const current=filter.value||"All";
+  const firstBuild=filter.dataset.defaultApplied!=="1";
+  const current=firstBuild ? RECOMMENDED_PALETTES_FILTER : (filter.value||RECOMMENDED_PALETTES_FILTER);
+  filter.dataset.defaultApplied="1";
 
   const styleCats=[...new Set(ALL_PALETTES.map(p=>p[1]))].sort((a,b)=>a.localeCompare(b));
   const availableColorCats=COLOR_CATEGORY_ORDER.filter(fam=>
@@ -5622,7 +5624,7 @@ function populateCategoryFilter(){
   filter.appendChild(styleGroup);
 
   const validValues=["All",FAVORITE_PALETTES_FILTER,RECOMMENDED_PALETTES_FILTER,...styleCats,...availableColorCats.map(c=>"color:"+c)];
-  filter.value=validValues.includes(current)?current:"All";
+  filter.value=validValues.includes(current)?current:RECOMMENDED_PALETTES_FILTER;
 }
 function buildPaletteSelect(){
   const select=$("paletteSelect");
@@ -6305,7 +6307,7 @@ async function applyOriginalPaletteCount(){
 
 function getImagePaletteMode(){
   const el=$("imagePaletteMode");
-  return el ? el.value : "original";
+  return el ? el.value : "keyColors";
 }
 
 function buildCurrentImagePalette(){
@@ -7150,7 +7152,7 @@ function getMutedMuseumCandidates(availableBase,targetFamily,relatedFamilies,th,
 
 function getGoldenMatchMode(){
   const el=$("goldenMatchMode");
-  return el ? el.value : "original";
+  return el ? el.value : "balanced";
 }
 
 function getMixMatchMode(){
@@ -7665,7 +7667,7 @@ function restore(){
     preview.style.display="none";
   }
   const meta=$("imagePaletteMeta");
-  if(meta) meta.textContent="Upload a JPG, PNG, or WebP. The dominant colors will become the active palette automatically.";
+  if(meta) meta.textContent="Upload a JPG, PNG, or WebP. Distinct key colors will become the active palette automatically.";
 
   $("status").textContent="Restored exact startup state: GOLDEN on the left, original artwork on the right.";
 }
@@ -8192,7 +8194,7 @@ async function returnToImageOriginal(){
     resetShuffleHistory();
     clearArtworkHighlight();
     resetGoldenEditsForNewImage();
-    restoreGoldenMatchingMode("original");
+    restoreGoldenMatchingMode("balanced");
 
     await loadLibraryImageIntoPalette(blackSelected.item,blackSelected.section);
     $("status").textContent=`Image Original restored from the black-selected image: ${blackSelected.item.name || "Saved image"}.`;
@@ -8204,7 +8206,7 @@ async function returnToImageOriginal(){
     resetShuffleHistory();
     clearArtworkHighlight();
     resetGoldenEditsForNewImage();
-    restoreGoldenMatchingMode("original");
+    restoreGoldenMatchingMode("balanced");
 
     $("host").innerHTML="";
     svg=originalSvg.cloneNode(true);
@@ -9124,11 +9126,13 @@ async function clearImageLibrary(){
 }
 
 function loadSavedImageDataUrl(dataUrl,name="Saved image"){
+  const imageModeSelect=$("imagePaletteMode");
+  if(imageModeSelect) imageModeSelect.value="keyColors";
   resetGoldenEditsForNewImage();
-  restoreGoldenMatchingMode("original");
+  restoreGoldenMatchingMode("balanced");
   imagePaletteFileName=name;
   $("imagePaletteMeta").textContent=`Reading ${name}…`;
-  $("status").textContent="Reading saved image and extracting dominant colors…";
+  $("status").textContent="Reading saved image and extracting distinct key colors…";
 
   const img=new Image();
   img.onload=()=>{
@@ -9138,9 +9142,9 @@ function loadSavedImageDataUrl(dataUrl,name="Saved image"){
       const preview=$("imagePalettePreview");
       preview.src=dataUrl;
       preview.style.display="block";
-      restoreGoldenMatchingMode("original");
+      restoreGoldenMatchingMode("balanced");
       applyImagePalette();
-      $("imagePaletteMeta").textContent=`${name} · ${imagePaletteHexes.length} dominant colors extracted`;
+      $("imagePaletteMeta").textContent=`${name} · ${imagePaletteHexes.length} distinct key colors extracted`;
     }catch(err){
       alert("Could not create a palette from this saved image: "+err.message);
     }
@@ -9623,13 +9627,13 @@ async function renderImageLibrary(options={}){
 async function loadLibraryImageIntoPalette(item, section="active"){
   if(!item || !item.dataUrl) return false;
 
-  // Selecting any library image always resets Image palette mode to ORIGINAL first.
+  // Each selected image starts with the most useful artistic extraction mode.
   const imageModeSelect=$("imagePaletteMode");
-  if(imageModeSelect) imageModeSelect.value="original";
+  if(imageModeSelect) imageModeSelect.value="keyColors";
 
-  // GOLDEN + MIXES matching mode also starts from ORIGINAL.
+  // GOLDEN + MIXES starts from the most reliable general-purpose match.
   resetGoldenEditsForNewImage();
-  restoreGoldenMatchingMode("original");
+  restoreGoldenMatchingMode("balanced");
 
   imagePaletteFileName=item.name || "Saved image";
   paletteSourceMode="image";
@@ -9650,7 +9654,7 @@ async function loadLibraryImageIntoPalette(item, section="active"){
     }
 
     applyImagePalette();
-    $("imagePaletteMeta").textContent=`${imagePaletteFileName} · ${imagePaletteHexes.length} dominant + distinct colors extracted`;
+    $("imagePaletteMeta").textContent=`${imagePaletteFileName} · ${imagePaletteHexes.length} distinct key colors extracted`;
     $("status").textContent=`Loaded ${imagePaletteFileName}.`;
 
     // Do not rebuild either image library on a normal image click.
@@ -9672,9 +9676,11 @@ async function loadLibraryImageIntoPalette(item, section="active"){
 
 async function processImagePaletteFile(file){
   if(!file) return;
-  // Loading a new image also resets GOLDEN + MIXES matching mode to ORIGINAL.
+  const imageModeSelect=$("imagePaletteMode");
+  if(imageModeSelect) imageModeSelect.value="keyColors";
+  // Loading a new image also starts GOLDEN + MIXES in Balanced mode.
   resetGoldenEditsForNewImage();
-  restoreGoldenMatchingMode("original");
+  restoreGoldenMatchingMode("balanced");
   if(!isSupportedImageFile(file)){
     alert("Please drop an image file (JPG, PNG, WebP, etc.).");
     return {ok:false,error:"unsupported"};
@@ -9683,7 +9689,7 @@ async function processImagePaletteFile(file){
   imagePaletteFileName=file.name || "Dropped image";
   paletteSourceMode="image";
   $("imagePaletteMeta").textContent=`Reading ${imagePaletteFileName}…`;
-  $("status").textContent="Reading image and extracting dominant colors…";
+  $("status").textContent="Reading image and extracting distinct key colors…";
 
   return await new Promise(resolve=>{
   const reader=new FileReader();
@@ -9749,7 +9755,7 @@ async function processImagePaletteFile(file){
         preview.style.display="block";
 
         applyImagePalette();
-        $("imagePaletteMeta").textContent=`${imagePaletteFileName} · ${palette.length} dominant + distinct colors extracted and applied`;
+        $("imagePaletteMeta").textContent=`${imagePaletteFileName} · ${palette.length} distinct key colors extracted and applied`;
       }catch(err){
         $("imagePaletteMeta").textContent="Could not create a palette from this image.";
         $("status").textContent="Image palette failed.";
