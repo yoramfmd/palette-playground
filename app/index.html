@@ -2041,7 +2041,7 @@ button{touch-action:manipulation;}
   --huemint-font:Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 html,body,
-button,input,select,textarea,option{
+button,input,select,textarea,option,optgroup{
   font-family:var(--huemint-font);
   font-synthesis:weight;
 }
@@ -2060,7 +2060,7 @@ button,
   line-height:1.5;
   letter-spacing:0;
 }
-input,select,textarea,option,
+input,select,textarea,option,optgroup,
 input::placeholder,textarea::placeholder{
   font-family:var(--huemint-font);
   font-weight:400;
@@ -2070,6 +2070,16 @@ input::placeholder,textarea::placeholder{
 input::placeholder,textarea::placeholder{
   opacity:.62;
 }
+select,
+select option,
+select optgroup{
+  font-family:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  font-style:normal!important;
+  letter-spacing:0!important;
+  text-transform:none;
+}
+select option{font-weight:400!important}
+select optgroup{font-weight:500!important}
 label,.mapHeader,.hotkey,.zoomValue,.imagePaletteCount,#lightnessValue{
   font-weight:500;
 }

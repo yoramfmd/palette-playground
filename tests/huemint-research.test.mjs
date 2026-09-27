@@ -144,6 +144,9 @@ test('app typography follows Huemint Roboto styling including controls', () => {
   assert.match(appSource, /url\("fonts\/Roboto-SemiBold\.ttf"\)/);
   assert.match(appSource, /button,input,select,textarea,option/);
   assert.match(appSource, /input::placeholder,textarea::placeholder/);
+  assert.match(appSource, /select option,\s*select optgroup/);
+  assert.match(appSource, /select option\{font-weight:400!important\}/);
+  assert.match(appSource, /select optgroup\{font-weight:500!important\}/);
   assert.match(appSource, /font-weight:500/);
   assert.match(appSource, /font-weight:600/);
 });
