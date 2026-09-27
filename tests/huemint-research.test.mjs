@@ -132,6 +132,11 @@ test('research preview uses only the captured local corpus', () => {
   assert.match(generatorSource, /trackHistory: false/);
   assert.match(generatorSource, /creative: 'Creative'/);
   assert.match(generatorSource, /function removeFavorite/);
+  assert.match(generatorSource, /function setSelectedFavorite/);
+  assert.match(generatorSource, /favoriteSelection: true/);
+  assert.match(appSource, /id="huemintLocalRemoveFavorite"[^>]*disabled>Remove selected favorite<\/button>/);
+  assert.match(appSource, /\.huemintLocalFavoriteItem\.is-selected/);
+  assert.doesNotMatch(generatorSource, /huemintLocalDelete/);
   assert.match(appSource, /max-height:184px;overflow-y:auto/);
   assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);
 });

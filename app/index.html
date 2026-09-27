@@ -2065,20 +2065,22 @@ button{touch-action:manipulation;}
 .huemintLocalStrip.compact{height:34px;border-radius:8px}
 .huemintLocalFavorites{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 9px;max-height:184px;overflow-y:auto;overscroll-behavior:contain;padding:2px 6px 2px 2px;scrollbar-gutter:stable}
 .huemintLocalFavoriteItem{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 26px;
-  align-items:center;
-  gap:5px;
+  display:block;
   min-width:0;
-  padding:4px;
+  padding:3px;
   border:1px solid #e1dfda;
   border-radius:10px;
   background:#f8f8f6;
-  transition:background .16s ease,border-color .16s ease;
+  transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;
 }
 .huemintLocalFavoriteItem:hover{
   background:#fbfbf9;
   border-color:#cbc8c1;
+}
+.huemintLocalFavoriteItem.is-selected{
+  background:#f7f9fa;
+  border-color:#526272;
+  box-shadow:0 0 0 2px rgba(82,98,114,.16);
 }
 .huemintLocalFavorite{
   display:block;
@@ -2093,47 +2095,28 @@ button{touch-action:manipulation;}
   cursor:pointer;
 }
 .huemintLocalFavorite .huemintLocalStrip.compact{height:36px;border:1px solid #d8d6d0;border-radius:7px}
-.huemintLocalDelete{
-  position:relative;
-  width:26px;
-  height:26px;
-  min-height:26px;
-  padding:0;
-  border:1px solid transparent;
-  border-radius:50%!important;
-  background:transparent;
-  color:#6f716f;
-  font-size:0;
-  line-height:1;
-  box-shadow:none;
-  cursor:pointer;
-  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+.huemintLocalFavoriteItem.is-selected .huemintLocalStrip.compact{border-color:#8e9aa5}
+#huemintLocalRemoveFavorite{
+  display:block;
+  min-height:36px;
+  margin:8px 0 0 auto;
+  padding:7px 12px;
+  border:1px solid #e1d5d2!important;
+  background:#fbf8f7!important;
+  color:#8d3430!important;
+  font-size:11px;
+  box-shadow:none!important;
 }
-.huemintLocalDelete::before,
-.huemintLocalDelete::after{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:11px;
-  height:1.4px;
-  border-radius:2px;
-  background:currentColor;
+#huemintLocalRemoveFavorite:hover:not(:disabled){
+  background:#963b35!important;
+  border-color:#963b35!important;
+  color:#fff!important;
 }
-.huemintLocalDelete::before{transform:translate(-50%,-50%) rotate(45deg)}
-.huemintLocalDelete::after{transform:translate(-50%,-50%) rotate(-45deg)}
-.huemintLocalDelete:hover{
-  background:#963b35;
-  border-color:#963b35;
-  color:#fff;
-  transform:scale(1.04);
-}
-.huemintLocalDelete:focus-visible{
-  background:#fff;
-  border-color:#963b35;
-  color:#963b35;
-  outline:3px solid rgba(150,59,53,.18);
-  outline-offset:2px;
+#huemintLocalRemoveFavorite:disabled{
+  background:#f4f3f0!important;
+  border-color:#e4e2dd!important;
+  color:#aaa7a1!important;
+  opacity:1;
 }
 .huemintLocalEmpty{grid-column:1/-1;padding:10px;border:1px dashed #d8d5ce;border-radius:10px;text-align:center;font-size:11px;color:#8a8781}
 </style>
@@ -2715,6 +2698,7 @@ button{
     <div>
       <div class="comparePaletteLabel" style="margin-bottom:7px">Favorites</div>
       <div id="huemintLocalFavorites" class="huemintLocalFavorites"></div>
+      <button id="huemintLocalRemoveFavorite" class="secondary" type="button" disabled>Remove selected favorite</button>
     </div>
   </section>
 
