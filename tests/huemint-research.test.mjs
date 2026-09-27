@@ -330,13 +330,20 @@ test('palette matching controls remove the duplicate mode and group advanced cho
 
 test('balanced GOLDEN mapping protects dense overlay contrast using catalog colors only', () => {
   assert.match(appSource, /const GOLDEN_SPATIAL_CONTRAST_DELTA_E=28/);
+  assert.match(appSource, /const GOLDEN_SURFACE_CONTRAST_DELTA_E=22/);
+  assert.match(appSource, /const GOLDEN_SURFACE_LIGHTNESS_GAP=12/);
   assert.match(appSource, /function denseOverlayColorPairs\(\)/);
+  assert.match(appSource, /function adjacentSurfaceColorPairs\(\)/);
+  assert.match(appSource, /function goldenSurfaceContrastIsLow\(aHex,bHex\)/);
+  assert.match(appSource, /function goldenSurfaceContrastCandidate\(targetHex,backgroundHex\)/);
   assert.match(appSource, /item\.tag==="circle" \|\| item\.tag==="ellipse"/);
   assert.match(appSource, /pair\.count>=6/);
   assert.match(appSource, /function protectBalancedGoldenSpatialContrast\(map,imageMap\)/);
   assert.match(appSource, /getGoldenMatchMode\(\)!=="balanced"/);
   assert.match(appSource, /GOLDEN_CLEAN_ONLY_COLORS\.filter/);
   assert.match(appSource, /map\.set\(pair\.overlay,replacement\.hex\)/);
+  assert.match(appSource, /map\.set\(pair\.foreground,replacement\.hex\)/);
+  assert.match(appSource, /colorFamilyForHex\(color\.hex\)===targetFamily/);
   assert.doesNotMatch(appSource, /replacement\.rgb\s*=/);
 });
 

@@ -3869,6 +3869,8 @@ function closestCleanGoldenPerceptualOnly(targetRgb){
 }
 
 const GOLDEN_SPATIAL_CONTRAST_DELTA_E=28;
+const GOLDEN_SURFACE_CONTRAST_DELTA_E=22;
+const GOLDEN_SURFACE_LIGHTNESS_GAP=12;
 
 function denseOverlayColorPairs(){
   if(!refs || !refs.size) return [];
@@ -3910,6 +3912,60 @@ function denseOverlayColorPairs(){
   return [...counts.values()].filter(pair=>pair.count>=6);
 }
 
+function adjacentSurfaceColorPairs(){
+  if(!refs || !refs.size) return [];
+  const surfaces=[];
+  refs.forEach((items,source)=>{
+    (items||[]).forEach(node=>{
+      const tag=String(node?.tagName||"").toLowerCase();
+      if(!["rect","path","polygon"].includes(tag) || !node.isConnected) return;
+      const box=node.getBoundingClientRect();
+      const area=Math.max(0,box.width)*Math.max(0,box.height);
+      if(area<100) return;
+      surfaces.push({node,source,box,area});
+    });
+  });
+
+  const pairs=[];
+  const seen=new Set();
+  surfaces.forEach(foreground=>{
+    let best=null;
+    surfaces.forEach(background=>{
+      if(background===foreground || background.source===foreground.source) return;
+      if(background.area<foreground.area*1.18) return;
+      const position=background.node.compareDocumentPosition(foreground.node);
+      if(!(position & Node.DOCUMENT_POSITION_FOLLOWING)) return;
+
+      const cx=foreground.box.left+foreground.box.width/2;
+      const cy=foreground.box.top+foreground.box.height/2;
+      const contained=cx>=background.box.left && cx<=background.box.right &&
+        cy>=background.box.top && cy<=background.box.bottom;
+
+      const overlapX=Math.max(0,Math.min(foreground.box.right,background.box.right)-Math.max(foreground.box.left,background.box.left));
+      const overlapY=Math.max(0,Math.min(foreground.box.bottom,background.box.bottom)-Math.max(foreground.box.top,background.box.top));
+      const horizontalTouch=Math.min(Math.abs(foreground.box.right-background.box.left),Math.abs(background.box.right-foreground.box.left))<=2 &&
+        overlapY>=Math.min(foreground.box.height,background.box.height)*.28;
+      const verticalTouch=Math.min(Math.abs(foreground.box.bottom-background.box.top),Math.abs(background.box.bottom-foreground.box.top))<=2 &&
+        overlapX>=Math.min(foreground.box.width,background.box.width)*.28;
+      if(!contained && !horizontalTouch && !verticalTouch) return;
+      if(!best || background.area<best.area) best=background;
+    });
+    if(!best) return;
+    const key=`${foreground.source}|${best.source}`;
+    if(seen.has(key)) return;
+    seen.add(key);
+    pairs.push({foreground:foreground.source,background:best.source});
+  });
+  return pairs;
+}
+
+function goldenSurfaceContrastIsLow(aHex,bHex){
+  const a=rgb(aHex), b=rgb(bHex);
+  const delta=deltaE76(a,b);
+  const lightnessGap=Math.abs(rgbToLabTuple(a)[0]-rgbToLabTuple(b)[0]);
+  return delta<GOLDEN_SURFACE_CONTRAST_DELTA_E || lightnessGap<GOLDEN_SURFACE_LIGHTNESS_GAP;
+}
+
 function goldenContrastCandidate(targetHex,backgroundHex){
   const targetRgb=rgb(targetHex);
   const backgroundRgb=rgb(backgroundHex);
@@ -3920,9 +3976,25 @@ function goldenContrastCandidate(targetHex,backgroundHex){
   return closestGoldenFromList(targetRgb,pool,"balanced",new Set());
 }
 
+function goldenSurfaceContrastCandidate(targetHex,backgroundHex){
+  const targetRgb=rgb(targetHex);
+  const targetFamily=colorFamilyForRgbTuple(targetRgb);
+  const relatedFamilies=relatedFamiliesForGoldenMatch(targetFamily);
+  const validContrast=color=>!goldenSurfaceContrastIsLow(color.hex,backgroundHex);
+  const sameFamily=GOLDEN_CLEAN_ONLY_COLORS.filter(color=>
+    colorFamilyForHex(color.hex)===targetFamily && validContrast(color)
+  );
+  const related=GOLDEN_CLEAN_ONLY_COLORS.filter(color=>
+    relatedFamilies.includes(colorFamilyForHex(color.hex)) && validContrast(color)
+  );
+  const pool=sameFamily.length ? sameFamily : related.length ? related : GOLDEN_CLEAN_ONLY_COLORS.filter(validContrast);
+  return closestGoldenFromList(targetRgb,pool.length ? pool : GOLDEN_CLEAN_ONLY_COLORS,"balanced",new Set());
+}
+
 function protectBalancedGoldenSpatialContrast(map,imageMap){
   if(getGoldenMatchMode()!=="balanced" || !map?.size) return map;
   let paletteRowChanged=false;
+  const changedSources=new Set();
   denseOverlayColorPairs().forEach(pair=>{
     if(locked.has(pair.overlay) || locked.has(pair.background)) return;
     const overlayHex=map.get(pair.overlay);
@@ -3938,6 +4010,29 @@ function protectBalancedGoldenSpatialContrast(map,imageMap){
     if(!replacement || replacement.hex===overlayHex) return;
 
     map.set(pair.overlay,replacement.hex);
+    changedSources.add(pair.overlay);
+    if(slot>=0){
+      automaticGoldenSlotHexes[slot]=replacement.hex;
+      goldenPreviewHexes[slot]=replacement.hex;
+      paletteRowChanged=true;
+    }
+  });
+
+  adjacentSurfaceColorPairs().forEach(pair=>{
+    if(changedSources.has(pair.foreground) || locked.has(pair.foreground) || locked.has(pair.background)) return;
+    const foregroundHex=map.get(pair.foreground);
+    const backgroundHex=map.get(pair.background);
+    if(!foregroundHex || !backgroundHex || !goldenSurfaceContrastIsLow(foregroundHex,backgroundHex)) return;
+
+    const sourceIndex=sourceColors.indexOf(pair.foreground);
+    const slot=getSourceSlotIndex(pair.foreground,sourceIndex);
+    if(slot>=0 && manualGoldenOverrides.has(slot)) return;
+    const targetHex=(imageMap && imageMap.get(pair.foreground)) || pair.foreground;
+    const replacement=goldenSurfaceContrastCandidate(targetHex,backgroundHex);
+    if(!replacement || replacement.hex===foregroundHex || goldenSurfaceContrastIsLow(replacement.hex,backgroundHex)) return;
+
+    map.set(pair.foreground,replacement.hex);
+    changedSources.add(pair.foreground);
     if(slot>=0){
       automaticGoldenSlotHexes[slot]=replacement.hex;
       goldenPreviewHexes[slot]=replacement.hex;
