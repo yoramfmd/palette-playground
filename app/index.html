@@ -10401,6 +10401,8 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
       quickNavItems.forEach(item=>{
         if(item.target.getBoundingClientRect().top<=marker) current=item;
       });
+      const atBottom=side.scrollTop+side.clientHeight>=side.scrollHeight-8;
+      if(atBottom && quickNavItems.length) current=quickNavItems[quickNavItems.length-1];
       if(current) setCurrentQuickNav(current);
     });
   },{passive:true});
