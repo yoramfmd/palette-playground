@@ -1994,6 +1994,8 @@ button{touch-action:manipulation;}
 .huemintResearchBadge{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:99px;background:#e8f3ec;color:#326347;white-space:nowrap}
 .huemintLocalActions{display:flex;gap:8px;flex-wrap:wrap}
 .huemintLocalActions button{min-height:38px}
+.huemintLocalFilters{display:grid;grid-template-columns:1fr 1.35fr;gap:10px}
+.huemintLocalFilters>div{display:grid;gap:6px;min-width:0}
 .huemintLocalStrip{display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:58px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
 .huemintLocalStrip span{display:block;min-width:0}
 .huemintLocalStrip.compact{height:34px;border-radius:8px}
@@ -2080,19 +2082,23 @@ button{touch-action:manipulation;}
       </div>
       <span class="huemintResearchBadge">Research</span>
     </div>
-    <label for="huemintLocalTemplate">Template</label>
-    <select id="huemintLocalTemplate">
-      <option value="illustration-3" selected>Illustration 3 · 10 direct artwork colors</option>
-      <option value="illustration-1">Illustration 1 · 6 creative colors</option>
-      <option value="website-magazine">Website Magazine · 4 core colors</option>
-    </select>
+    <div class="huemintLocalFilters">
+      <div>
+        <label for="huemintLocalCategory">Category</label>
+        <select id="huemintLocalCategory"></select>
+      </div>
+      <div>
+        <label for="huemintLocalTemplate">Template</label>
+        <select id="huemintLocalTemplate"></select>
+      </div>
+    </div>
     <div id="huemintLocalPalette" aria-label="Current Huemint palette"></div>
     <div class="huemintLocalActions">
       <button id="huemintLocalGenerate" type="button">Generate</button>
       <button id="huemintLocalSaveFavorite" class="secondary" type="button">Save favorite</button>
     </div>
     <div id="huemintLocalStatus" class="huemintLocalStatus">Loading local palettes…</div>
-    <div class="huemintLocalNote">Direct mode never mixes neighboring colors. For 10-slot artwork, Illustration 3 selects 10 of Huemint’s 11 original role-based colors without generating gradients.</div>
+    <div id="huemintLocalNote" class="huemintLocalNote">Direct mode uses only Huemint’s original colors and never synthesizes intermediate colors.</div>
     <div>
       <div class="comparePaletteLabel" style="margin-bottom:7px">Favorites</div>
       <div id="huemintLocalFavorites" class="huemintLocalFavorites"></div>
@@ -4590,9 +4596,12 @@ function hardCommitAllThreePaletteViews(){
   resetLightnessBases();
 }
 
-function applyListPaletteToAllThreeWindows(colors){
+function applyListPaletteToAllThreeWindows(colors,options={}){
   const slotCount=getPaletteSlotCount();
-  const nextOriginalHexes=expandPaletteToCount(colors,slotCount);
+  const directColors=(colors||[]).map(color=>String(color).toUpperCase()).filter(Boolean);
+  const nextOriginalHexes=options.direct && directColors.length
+    ? Array.from({length:slotCount},(_,index)=>directColors[index%directColors.length])
+    : expandPaletteToCount(colors,slotCount);
 
   // Reset synchronized state ONCE.
   imagePaletteHexes=[...nextOriginalHexes];

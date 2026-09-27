@@ -6,6 +6,7 @@ import { normalizeHuemintResponse, requestHuemintPalettes } from '../research/hu
 import { makeCorpusRecord, paletteId } from '../research/huemint/corpus.mjs';
 import { selectRealHuemintPalette } from '../research/huemint/local-engine.mjs';
 import { COLLECTION_LIMITS, parseCollectorArgs } from '../scripts/huemint/args.mjs';
+import { HUEMINT_TEMPLATE_CATALOG } from '../research/huemint/template-catalog.mjs';
 
 const appSource = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
 const browserCorpusSource = await readFile(new URL('../app/js/huemint-corpus.js', import.meta.url), 'utf8');
@@ -112,13 +113,26 @@ test('research preview uses only the captured local corpus', () => {
   assert.match(appSource, /js\/huemint-corpus\.js/);
   assert.match(appSource, /js\/huemint-generator\.js/);
   assert.match(browserCorpusSource, /window\.HUEMINT_LOCAL_CORPUS/);
+  assert.match(browserCorpusSource, /window\.HUEMINT_TEMPLATE_CATALOG/);
   assert.match(generatorSource, /applyListPaletteToAllThreeWindows/);
   assert.doesNotMatch(generatorSource, /fetch\s*\(/);
   assert.doesNotMatch(generatorSource, /Math\.random/);
   assert.doesNotMatch(generatorSource, /mixHex/);
   assert.match(generatorSource, /directPaletteForSlots/);
+  assert.match(generatorSource, /\{ direct: true \}/);
+  assert.match(appSource, /options\.direct && directColors\.length/);
   assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
   assert.match(generatorSource, /function removeFavorite/);
   assert.match(appSource, /max-height:184px;overflow-y:auto/);
   assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);
+});
+
+test('catalog covers every Huemint navigation template', () => {
+  assert.equal(HUEMINT_TEMPLATE_CATALOG.length, 27);
+  assert.deepEqual([...new Set(HUEMINT_TEMPLATE_CATALOG.map(item => item.category))], [
+    'Brand', 'Website', 'Gradient', 'Gradient + Background', 'Illustration', 'Bootstrap'
+  ]);
+  for (const item of HUEMINT_TEMPLATE_CATALOG) {
+    assert.match(browserCorpusSource, new RegExp(`"slug": "${item.slug}"`));
+  }
 });

@@ -11,6 +11,8 @@
     "build:mac": "electron-builder --mac",
     "huemint:probe": "node scripts/huemint/probe.mjs",
     "huemint:collect": "node scripts/huemint/collect.mjs",
+    "huemint:discover": "node scripts/huemint/discover-templates.mjs",
+    "huemint:collect-catalog": "node scripts/huemint/collect-catalog.mjs",
     "huemint:local": "node scripts/huemint/local-demo.mjs",
     "huemint:browser-corpus": "node scripts/huemint/build-browser-corpus.mjs"
   },

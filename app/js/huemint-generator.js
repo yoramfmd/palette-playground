@@ -1,6 +1,9 @@
 (() => {
   const corpus = Array.isArray(window.HUEMINT_LOCAL_CORPUS)
-    ? window.HUEMINT_LOCAL_CORPUS.filter(record => Array.isArray(record.colors) && record.colors.length >= 4)
+    ? window.HUEMINT_LOCAL_CORPUS.filter(record => Array.isArray(record.colors) && record.colors.length >= 2)
+    : [];
+  const catalog = Array.isArray(window.HUEMINT_TEMPLATE_CATALOG)
+    ? window.HUEMINT_TEMPLATE_CATALOG.filter(item => corpus.some(record => record.template === item.slug))
     : [];
   const favoritesKey = 'palettePlaygroundHuemintFavoritesV1';
   const strip = document.getElementById('huemintLocalPalette');
@@ -8,15 +11,19 @@
   const generateButton = document.getElementById('huemintLocalGenerate');
   const saveButton = document.getElementById('huemintLocalSaveFavorite');
   const favoritesBox = document.getElementById('huemintLocalFavorites');
+  const categorySelect = document.getElementById('huemintLocalCategory');
   const templateSelect = document.getElementById('huemintLocalTemplate');
+  const note = document.getElementById('huemintLocalNote');
   let currentIndex = 0;
   let activeCorpus = [];
   let currentRecord = null;
 
   function templateLabel(template) {
-    if (template === 'illustration-1') return 'Illustration 1';
-    if (template === 'illustration-3') return 'Illustration 3';
-    return 'Website Magazine';
+    return catalog.find(item => item.slug === template)?.label || template;
+  }
+
+  function categoryForTemplate(template) {
+    return catalog.find(item => item.slug === template)?.category || 'Huemint';
   }
 
   function directPaletteForSlots(colors) {
@@ -70,9 +77,9 @@
     currentRecord = record;
     strip.replaceChildren(makeStrip(record.colors));
     if (typeof window.applyListPaletteToAllThreeWindows === 'function') {
-      window.applyListPaletteToAllThreeWindows(directPaletteForSlots(record.colors));
+      window.applyListPaletteToAllThreeWindows(directPaletteForSlots(record.colors), { direct: true });
     }
-    status.textContent = message || `Applied ${templateLabel(record.template)} · direct colors, no interpolation`;
+    status.textContent = message || `Applied ${categoryForTemplate(record.template)} · ${templateLabel(record.template)} · direct colors`;
   }
 
   function renderFavorites() {
@@ -116,6 +123,29 @@
     return;
   }
 
+  function populateCategories() {
+    const categories = [...new Set(catalog.map(item => item.category))];
+    categorySelect.replaceChildren(...categories.map(category => {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      return option;
+    }));
+    categorySelect.value = categories.includes('Illustration') ? 'Illustration' : categories[0];
+  }
+
+  function populateTemplates(preferredTemplate) {
+    const templates = catalog.filter(item => item.category === categorySelect.value);
+    templateSelect.replaceChildren(...templates.map(item => {
+      const option = document.createElement('option');
+      option.value = item.slug;
+      option.textContent = `${item.label} · ${item.numColors} colors`;
+      return option;
+    }));
+    const preferred = templates.find(item => item.slug === preferredTemplate);
+    templateSelect.value = preferred?.slug || templates[0]?.slug || '';
+  }
+
   function selectTemplate() {
     activeCorpus = corpus.filter(record => record.template === templateSelect.value);
     currentIndex = 0;
@@ -128,14 +158,21 @@
       return;
     }
     strip.replaceChildren(makeStrip(currentRecord.colors));
-    status.textContent = `${activeCorpus.length} real ${templateLabel(templateSelect.value)} palettes available locally`;
+    status.textContent = `${activeCorpus.length} real ${categoryForTemplate(templateSelect.value)} · ${templateLabel(templateSelect.value)} palettes available locally`;
+    note.textContent = `Direct mode uses only the ${currentRecord.colors.length} original Huemint colors. For artwork with more slots, colors repeat without gradients or interpolation.`;
     generateButton.disabled = false;
     saveButton.disabled = false;
   }
 
+  populateCategories();
+  populateTemplates('illustration-3');
   selectTemplate();
   renderFavorites();
 
+  categorySelect.addEventListener('change', () => {
+    populateTemplates();
+    selectTemplate();
+  });
   templateSelect.addEventListener('change', selectTemplate);
 
   generateButton.addEventListener('click', () => {
