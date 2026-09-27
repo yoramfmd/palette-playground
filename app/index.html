@@ -3868,86 +3868,6 @@ function closestCleanGoldenPerceptualOnly(targetRgb){
   );
 }
 
-const GOLDEN_SPATIAL_CONTRAST_DELTA_E=28;
-
-function denseOverlayColorPairs(){
-  if(!refs || !refs.size) return [];
-  const nodes=[];
-  refs.forEach((items,source)=>{
-    (items||[]).forEach(node=>{
-      if(!node?.isConnected || typeof node.getBoundingClientRect!=="function") return;
-      const box=node.getBoundingClientRect();
-      const area=Math.max(0,box.width)*Math.max(0,box.height);
-      if(area<1) return;
-      nodes.push({node,source,box,area,tag:String(node.tagName||"").toLowerCase()});
-    });
-  });
-
-  const overlays=nodes.filter(item=>item.tag==="circle" || item.tag==="ellipse");
-  const backgrounds=nodes.filter(item=>
-    ["rect","path","polygon"].includes(item.tag) && item.area>=80
-  );
-  const counts=new Map();
-
-  overlays.forEach(overlay=>{
-    const cx=overlay.box.left+overlay.box.width/2;
-    const cy=overlay.box.top+overlay.box.height/2;
-    let best=null;
-    backgrounds.forEach(background=>{
-      if(background.source===overlay.source || background.area<overlay.area*4) return;
-      if(cx<background.box.left || cx>background.box.right || cy<background.box.top || cy>background.box.bottom) return;
-      const position=background.node.compareDocumentPosition(overlay.node);
-      if(!(position & Node.DOCUMENT_POSITION_FOLLOWING)) return;
-      if(!best || background.area<best.area) best=background;
-    });
-    if(!best) return;
-    const key=`${overlay.source}|${best.source}`;
-    const current=counts.get(key)||{overlay:overlay.source,background:best.source,count:0};
-    current.count+=1;
-    counts.set(key,current);
-  });
-
-  return [...counts.values()].filter(pair=>pair.count>=6);
-}
-
-function goldenContrastCandidate(targetHex,backgroundHex){
-  const targetRgb=rgb(targetHex);
-  const backgroundRgb=rgb(backgroundHex);
-  const separated=GOLDEN_CLEAN_ONLY_COLORS.filter(color=>
-    deltaE76(color.rgb,backgroundRgb)>=GOLDEN_SPATIAL_CONTRAST_DELTA_E
-  );
-  const pool=separated.length ? separated : GOLDEN_CLEAN_ONLY_COLORS;
-  return closestGoldenFromList(targetRgb,pool,"balanced",new Set());
-}
-
-function protectBalancedGoldenSpatialContrast(map,imageMap){
-  if(getGoldenMatchMode()!=="balanced" || !map?.size) return map;
-  let paletteRowChanged=false;
-  denseOverlayColorPairs().forEach(pair=>{
-    if(locked.has(pair.overlay) || locked.has(pair.background)) return;
-    const overlayHex=map.get(pair.overlay);
-    const backgroundHex=map.get(pair.background);
-    if(!overlayHex || !backgroundHex) return;
-    if(deltaE76(rgb(overlayHex),rgb(backgroundHex))>=GOLDEN_SPATIAL_CONTRAST_DELTA_E) return;
-
-    const sourceIndex=sourceColors.indexOf(pair.overlay);
-    const slot=getSourceSlotIndex(pair.overlay,sourceIndex);
-    if(slot>=0 && manualGoldenOverrides.has(slot)) return;
-    const targetHex=(imageMap && imageMap.get(pair.overlay)) || pair.overlay;
-    const replacement=goldenContrastCandidate(targetHex,backgroundHex);
-    if(!replacement || replacement.hex===overlayHex) return;
-
-    map.set(pair.overlay,replacement.hex);
-    if(slot>=0){
-      automaticGoldenSlotHexes[slot]=replacement.hex;
-      goldenPreviewHexes[slot]=replacement.hex;
-      paletteRowChanged=true;
-    }
-  });
-  if(paletteRowChanged) renderCurrentGoldenPaletteRow();
-  return map;
-}
-
 function buildCleanOnlyApproxMapFromImageMap(imageMap){
   const M=new Map();
   locked.forEach(c=>M.set(c,c));
@@ -3970,7 +3890,7 @@ function buildCleanOnlyApproxMapFromImageMap(imageMap){
     M.set(src,hex);
   });
 
-  return protectBalancedGoldenSpatialContrast(M,imageMap);
+  return M;
 }
 
 function refreshCleanOnlyArtwork(imageMapOverride=null){
