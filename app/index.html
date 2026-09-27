@@ -2275,6 +2275,222 @@ button{
   .compareStage{grid-template-columns:1fr!important}
 }
 </style>
+
+<style id="paletteMatrixV1Styles">
+.imagePaletteTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.paletteCurrentTitle{
+  display:grid;
+  gap:2px;
+}
+.paletteCurrentTitle strong{
+  color:#27313d;
+  font-size:14px;
+  font-weight:600;
+}
+.paletteCurrentTitle span{
+  color:#777b80;
+  font-size:11px;
+}
+.imagePaletteCount{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  white-space:nowrap;
+}
+.imagePaletteCountLabel{
+  color:#656a70;
+  font-size:11px;
+  font-weight:500;
+}
+.imagePaletteCount button{
+  width:34px;
+  min-width:34px;
+  min-height:34px;
+  height:34px;
+  padding:0;
+  border-radius:9px!important;
+}
+#imagePaletteValue{
+  min-width:18px;
+  text-align:center;
+  color:#252d36;
+  font-weight:600;
+}
+.paletteMatrixHeading{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+  margin:18px 0 8px;
+}
+.paletteMatrixHeading strong{
+  color:#27313d;
+  font-size:13px;
+  font-weight:600;
+}
+.paletteMatrixHeading span{
+  color:#7a7d81;
+  font-size:10px;
+}
+.paletteMatrixViewport{
+  width:100%;
+  overflow-x:auto;
+  padding:3px 2px 7px;
+  scrollbar-width:thin;
+}
+.paletteMatrixInner{
+  --matrix-label:58px;
+  --matrix-swatch:30px;
+  --matrix-gap:6px;
+  --matrix-action:36px;
+  min-width:466px;
+}
+.paletteMatrixHeader,
+.comparePaletteGroup,
+.comparePaletteGroup.hasRestore{
+  display:grid!important;
+  grid-template-columns:var(--matrix-label) 354px var(--matrix-action)!important;
+  grid-template-areas:"label row action"!important;
+  align-items:center!important;
+  column-gap:8px!important;
+}
+.paletteMatrixHeader{
+  min-height:22px;
+  margin-bottom:3px;
+}
+.paletteMatrixHeaderLabel{
+  grid-area:label;
+  color:#8a8d91;
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.paletteMatrixNumbers{
+  grid-area:row;
+  display:grid;
+  grid-template-columns:repeat(10,var(--matrix-swatch));
+  gap:var(--matrix-gap);
+}
+.paletteMatrixNumbers span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:18px;
+  border-radius:6px;
+  color:#8a8d91;
+  font-size:9px;
+  font-variant-numeric:tabular-nums;
+  transition:background .14s ease,color .14s ease;
+}
+.paletteMatrixNumbers span.is-preview-column{
+  background:#eaf0fa;
+  color:#2f5f9d;
+  font-weight:700;
+}
+.comparePaletteBox{
+  gap:5px!important;
+  margin-top:0!important;
+}
+.comparePaletteGroup{
+  min-height:46px;
+  padding:7px 0!important;
+  border-color:transparent!important;
+  border-radius:10px!important;
+}
+.comparePaletteGroup.activePaletteGroup{
+  border-color:#cbd4de!important;
+  background:#f7f9fb!important;
+  box-shadow:none!important;
+}
+.comparePaletteLabel,
+.comparePaletteGroup.hasRestore .comparePaletteLabel{
+  grid-area:label!important;
+  margin:0!important;
+  padding-left:7px;
+  font-size:9px;
+  letter-spacing:.06em;
+}
+.comparePaletteRow,
+#imagePaletteSwatches,
+#goldenPaletteSwatches,
+#mixPaletteSwatches{
+  grid-area:row!important;
+  display:grid!important;
+  grid-template-columns:repeat(10,var(--matrix-swatch))!important;
+  gap:var(--matrix-gap)!important;
+  width:354px!important;
+  min-height:30px!important;
+  overflow:visible!important;
+}
+#imagePaletteSwatches .comparePaletteItem,
+#goldenPaletteSwatches .comparePaletteItem,
+#mixPaletteSwatches .comparePaletteItem{
+  width:30px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+}
+.comparePaletteSwatch{
+  transition:transform .14s ease,box-shadow .14s ease,outline-color .14s ease;
+}
+.comparePaletteItem.is-preview-column .comparePaletteSwatch{
+  transform:translateY(-2px)!important;
+  box-shadow:0 4px 10px rgba(38,52,67,.18)!important;
+}
+.comparePaletteItem.selectedPaletteSlot .comparePaletteSwatch{
+  outline:2px solid #2f6fed!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.75) inset!important;
+}
+.paletteRestoreButton{
+  grid-area:action!important;
+  width:34px;
+  min-width:34px;
+  min-height:34px;
+  height:34px;
+  padding:0!important;
+  justify-self:center!important;
+  border-radius:9px!important;
+  font-size:16px!important;
+}
+.paletteMatrixReadout{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:42px;
+  margin-top:8px;
+  padding:8px 9px 8px 12px;
+  border:1px solid #e1dfda;
+  border-radius:10px;
+  background:#f8f7f4;
+}
+#paletteMatrixReadoutText{
+  min-width:0;
+  color:#4f555c;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#paletteMatrixCopy{
+  min-height:32px;
+  padding:6px 10px;
+  border-radius:8px!important;
+  font-size:10px;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  .imagePaletteTop{align-items:flex-start;flex-direction:column}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -2298,9 +2514,14 @@ button{
 <div class="imagePaletteBox">
   <div class="imagePaletteTop">
     <input id="imagePaletteInput" type="file" accept="image/*" multiple style="display:none">
+    <div class="paletteCurrentTitle">
+      <strong>Current palette</strong>
+      <span>Original and matched paint colors</span>
+    </div>
     <div class="imagePaletteCount">
+      <span class="imagePaletteCountLabel">Number of colors</span>
       <button id="imagePaletteMinus" type="button" title="Fewer colors">−</button>
-      <span id="imagePaletteValue">10</span> colors
+      <span id="imagePaletteValue">10</span>
       <button id="imagePalettePlus" type="button" title="More colors">+</button>
     </div>
   </div>
@@ -2326,21 +2547,40 @@ button{
     <option value="closestRgb">Closest RGB</option>
   </select>
 
-  <div class="comparePaletteBox">
-    <div class="comparePaletteGroup">
-      <div class="comparePaletteLabel">ORIGINAL</div>
-      <div id="imagePaletteSwatches" class="comparePaletteRow"></div>
+  <div class="paletteMatrixHeading">
+    <strong>Palette matrix</strong>
+    <span>Same color role in each column</span>
+  </div>
+  <div class="paletteMatrixViewport">
+    <div class="paletteMatrixInner">
+      <div class="paletteMatrixHeader" aria-hidden="true">
+        <span class="paletteMatrixHeaderLabel">Color</span>
+        <div class="paletteMatrixNumbers">
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        </div>
+      </div>
+      <div class="comparePaletteBox">
+        <div class="comparePaletteGroup">
+          <div class="comparePaletteLabel">ORIGINAL</div>
+          <div id="imagePaletteSwatches" class="comparePaletteRow"></div>
+        </div>
+        <div class="comparePaletteGroup hasRestore">
+          <div class="comparePaletteLabel">GOLDEN</div>
+          <div id="goldenPaletteSwatches" class="comparePaletteRow"></div>
+          <button id="restoreGoldenPalette" class="paletteRestoreButton" type="button" title="Restore GOLDEN colors from the current image or random palette" aria-label="Restore GOLDEN colors">↶</button>
+        </div>
+        <div class="comparePaletteGroup hasRestore">
+          <div class="comparePaletteLabel">MIXES</div>
+          <div id="mixPaletteSwatches" class="comparePaletteRow"></div>
+          <button id="restoreMixPalette" class="paletteRestoreButton" type="button" title="Restore MIXES colors from the current image or random palette" aria-label="Restore MIXES colors">↶</button>
+        </div>
+      </div>
     </div>
-    <div class="comparePaletteGroup hasRestore">
-      <div class="comparePaletteLabel">GOLDEN</div>
-      <div id="goldenPaletteSwatches" class="comparePaletteRow"></div>
-      <button id="restoreGoldenPalette" class="paletteRestoreButton" type="button" title="Restore GOLDEN colors from the current image or random palette">↶ Restore</button>
-    </div>
-    <div class="comparePaletteGroup hasRestore">
-      <div class="comparePaletteLabel">MIXES</div>
-      <div id="mixPaletteSwatches" class="comparePaletteRow"></div>
-      <button id="restoreMixPalette" class="paletteRestoreButton" type="button" title="Restore MIXES colors from the current image or random palette">↶ Restore</button>
-    </div>
+  </div>
+  <div class="paletteMatrixReadout" aria-live="polite">
+    <span id="paletteMatrixReadoutText">Point to a color to see its RGB value.</span>
+    <button id="paletteMatrixCopy" class="secondary" type="button" disabled>Copy RGB</button>
   </div>
 
   <section class="huemintResearchBox" aria-labelledby="huemintLocalTitle">
@@ -4062,6 +4302,49 @@ function setActivePaletteGroup(kind){
   if(group) group.classList.add("activePaletteGroup");
 }
 
+function paletteMatrixRgbText(hex){
+  if(!hex) return "";
+  const [r,g,b]=rgb(hex);
+  return `RGB ${r}, ${g}, ${b}`;
+}
+
+function clearPaletteMatrixPreview(){
+  document.querySelectorAll(".comparePaletteItem.is-preview-column, .paletteMatrixNumbers .is-preview-column")
+    .forEach(el=>el.classList.remove("is-preview-column"));
+}
+
+function showPaletteMatrixRgb(slot,kind,hex){
+  clearPaletteMatrixPreview();
+  document.querySelectorAll(".comparePaletteRow").forEach(row=>{
+    row.children[slot]?.classList.add("is-preview-column");
+  });
+  document.querySelectorAll(".paletteMatrixNumbers span")[slot]?.classList.add("is-preview-column");
+
+  const label=kind==="image" ? "ORIGINAL" : kind==="golden" ? "GOLDEN" : "MIXES";
+  const value=paletteMatrixRgbText(hex);
+  const readout=$("paletteMatrixReadoutText");
+  const copy=$("paletteMatrixCopy");
+  if(readout) readout.textContent=`${label} · Color ${slot+1} · ${value}`;
+  if(copy){
+    copy.disabled=!value;
+    copy.dataset.rgb=value;
+    copy.dataset.label=`${label} color ${slot+1}`;
+  }
+}
+
+async function copyPaletteMatrixRgb(){
+  const copy=$("paletteMatrixCopy");
+  const value=copy?.dataset.rgb||"";
+  if(!value) return;
+  try{
+    await navigator.clipboard.writeText(value);
+    const label=copy.dataset.label||"Color";
+    $("paletteMatrixReadoutText").textContent=`${label} · ${value} · Copied`;
+  }catch(_){
+    $("paletteMatrixReadoutText").textContent=`${value} · Select and copy manually`;
+  }
+}
+
 function renderComparePaletteRow(hostId, colors, kind){
   const host=$(hostId);
   if(!host) return;
@@ -4073,6 +4356,8 @@ function renderComparePaletteRow(hostId, colors, kind){
     const hex=list[i];
     const item=document.createElement("div");
     item.className="comparePaletteItem";
+    item.dataset.slot=String(i);
+    item.dataset.paletteKind=kind;
 
     const sw=document.createElement("div");
     sw.className="comparePaletteSwatch" + (hex ? "" : " isEmpty");
@@ -4084,6 +4369,10 @@ function renderComparePaletteRow(hostId, colors, kind){
 
     if(hex){
       sw.style.background=hex;
+      const rgbValue=paletteMatrixRgbText(hex);
+      sw.setAttribute("aria-label",`${kind==="image" ? "Original" : kind==="golden" ? "GOLDEN" : "MIXES"} color ${i+1}, ${rgbValue}`);
+      sw.addEventListener("pointerenter",()=>showPaletteMatrixRgb(i,kind,hex));
+      sw.addEventListener("focus",()=>showPaletteMatrixRgb(i,kind,hex));
       const editable=(kind==="golden" || kind==="mix");
       if(editable){
         item.classList.add("isGoldenEditable");
@@ -9812,6 +10101,9 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
     });
   });
   if(panes.length) activate(panes[panes.length-1]);
+
+  document.getElementById("paletteMatrixCopy")?.addEventListener("click",copyPaletteMatrixRgb);
+  document.querySelector(".paletteMatrixViewport")?.addEventListener("pointerleave",clearPaletteMatrixPreview);
 })();
 </script>
 
