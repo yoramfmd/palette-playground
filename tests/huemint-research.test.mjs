@@ -1,10 +1,15 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { createWebsiteMagazineRequest, HUEMINT_API_URL } from '../research/huemint/config.mjs';
 import { normalizeHuemintResponse, requestHuemintPalettes } from '../research/huemint/client.mjs';
 import { makeCorpusRecord, paletteId } from '../research/huemint/corpus.mjs';
 import { selectRealHuemintPalette } from '../research/huemint/local-engine.mjs';
 import { COLLECTION_LIMITS, parseCollectorArgs } from '../scripts/huemint/args.mjs';
+
+const appSource = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
+const browserCorpusSource = await readFile(new URL('../app/js/huemint-corpus.js', import.meta.url), 'utf8');
+const generatorSource = await readFile(new URL('../app/js/huemint-generator.js', import.meta.url), 'utf8');
 
 test('Website Magazine request matches the current Huemint page proxy contract', () => {
   const payload = createWebsiteMagazineRequest();
@@ -79,4 +84,15 @@ test('local engine returns real corpus colors deterministically without synthesi
   assert.deepEqual(first.colors, second.colors);
   assert(source.some(record => record.colors.join('|') === first.colors.join('|')));
   assert.equal(first.localSelection.synthesizedColors, false);
+});
+
+test('research preview uses only the captured local corpus', () => {
+  assert.match(appSource, /id="huemintLocalGenerate"/);
+  assert.match(appSource, /js\/huemint-corpus\.js/);
+  assert.match(appSource, /js\/huemint-generator\.js/);
+  assert.match(browserCorpusSource, /window\.HUEMINT_LOCAL_CORPUS/);
+  assert.match(generatorSource, /applyListPaletteToAllThreeWindows/);
+  assert.doesNotMatch(generatorSource, /fetch\s*\(/);
+  assert.doesNotMatch(generatorSource, /Math\.random/);
+  assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
 });

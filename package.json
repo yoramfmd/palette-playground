@@ -11,7 +11,8 @@
     "build:mac": "electron-builder --mac",
     "huemint:probe": "node scripts/huemint/probe.mjs",
     "huemint:collect": "node scripts/huemint/collect.mjs",
-    "huemint:local": "node scripts/huemint/local-demo.mjs"
+    "huemint:local": "node scripts/huemint/local-demo.mjs",
+    "huemint:browser-corpus": "node scripts/huemint/build-browser-corpus.mjs"
   },
   "devDependencies": {
     "electron": "39.8.10",
