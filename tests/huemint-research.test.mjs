@@ -193,6 +193,17 @@ test('design polish keeps layout responsive and interaction state local', () => 
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
+test('duplicate scanner offers a near-exact default without automatic deletion', () => {
+  assert.match(appSource, /<option value="veryStrict" selected>Very strict · near-exact<\/option>/);
+  assert.match(appSource, /metrics\.meanDiff<=2\.2/);
+  assert.match(appSource, /metrics\.over16Fraction<=0\.008/);
+  assert.match(appSource, /metrics\.edgeFraction<=0\.03/);
+  assert.match(appSource, /metrics\.score>=95/);
+  assert.match(appSource, /function duplicateScannerPairwiseGroups/);
+  assert.match(appSource, /exactRedundantIndexes/);
+  assert.match(appSource, /Nothing is uploaded or deleted automatically/);
+});
+
 test('palette matrix aligns roles and exposes RGB values without a persistent readout', () => {
   assert.match(appSource, /id="paletteMatrixV1Styles"/);
   assert.match(appSource, /class="paletteMatrixNumbers"/);

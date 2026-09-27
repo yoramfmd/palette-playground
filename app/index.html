@@ -2711,8 +2711,8 @@ button{
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input id="imageLibraryAddInput" type="file" accept="image/*" multiple style="display:none">
         <button id="imageLibraryAddBtn" class="secondary" type="button" title="Choose multiple images and add them directly to Image Library">Add images</button>
-        <button id="scanImageDuplicatesBtn" class="secondary" type="button" title="Scan the current Image Library for exact and visually similar duplicate images">Scan duplicates</button>
-        <button id="scanAllImageDuplicatesBtn" class="secondary" type="button" title="Scan both Image Library and Deleted Images for exact and visually similar duplicate images">Scan active + deleted</button>
+        <button id="scanImageDuplicatesBtn" class="secondary" type="button" title="Scan the current Image Library for exact and near-identical duplicate images">Scan library</button>
+        <button id="scanAllImageDuplicatesBtn" class="secondary" type="button" title="Scan both Image Library and Deleted Images for exact and near-identical duplicate images">Scan library + deleted</button>
         <button id="connectDesktopBackup" class="secondary" type="button">Connect Desktop folder</button>
         <span id="desktopBackupStatus" class="imageLibrarySub" style="margin-left:8px;">Desktop backup not connected</span>
       </div>
@@ -9588,6 +9588,9 @@ function duplicateScannerSignatureMetrics(a,b){
 
 function duplicateScannerIsSimilar(metrics){
   const mode=$("duplicateScannerSensitivity")?.value || "recommended";
+  if(mode==="veryStrict"){
+    return metrics.meanDiff<=2.2 && metrics.over16Fraction<=0.008 && metrics.edgeFraction<=0.03 && metrics.score>=95;
+  }
   if(mode==="strict"){
     return metrics.meanDiff<=5.0 && metrics.over16Fraction<=0.035 && metrics.edgeFraction<=0.075;
   }
@@ -9612,6 +9615,27 @@ function duplicateScannerCluster(count,pairs){
     groups.get(root).push(i);
   }
   return [...groups.values()].filter(g=>g.length>1);
+}
+
+function duplicateScannerPairwiseGroups(count,pairs){
+  // Very strict mode avoids transitive false positives: every image in a group
+  // must be a direct near-exact match with every other image in that group.
+  const key=(a,b)=>`${Math.min(a,b)}:${Math.max(a,b)}`;
+  const pairSet=new Set(pairs.map(([a,b])=>key(a,b)));
+  const remaining=new Set(pairs.flat());
+  const groups=[];
+  while(remaining.size){
+    const seed=Math.min(...remaining);
+    const group=[seed];
+    const candidates=[...remaining].filter(idx=>idx!==seed && pairSet.has(key(seed,idx)));
+    for(const candidate of candidates){
+      if(group.every(member=>pairSet.has(key(member,candidate)))) group.push(candidate);
+    }
+    group.forEach(idx=>remaining.delete(idx));
+    if(group.length>1) groups.push(group);
+    else remaining.delete(seed);
+  }
+  return groups;
 }
 
 async function duplicateScannerDimensions(dataUrl){
@@ -9792,7 +9816,10 @@ async function runImageDuplicateScan(scope='active'){
     });
     const exactGroups=[...exactMap.values()].filter(g=>g.length>1);
     const exactPairs=new Set();
+    const exactRedundantIndexes=new Set();
     exactGroups.forEach(group=>{
+      const representative=duplicateScannerBestIndex(group);
+      group.forEach(idx=>{ if(idx!==representative) exactRedundantIndexes.add(idx); });
       for(let a=0;a<group.length;a++){
         for(let b=a+1;b<group.length;b++){
           exactPairs.add(`${Math.min(group[a],group[b])}:${Math.max(group[a],group[b])}`);
@@ -9810,7 +9837,7 @@ async function runImageDuplicateScan(scope='active'){
       for(let j=i+1;j<n;j++){
         pairCounter++;
         const key=`${i}:${j}`;
-        if(exactPairs.has(key)) continue;
+        if(exactPairs.has(key) || exactRedundantIndexes.has(i) || exactRedundantIndexes.has(j)) continue;
         const metrics=duplicateScannerSignatureMetrics(
           duplicateScannerRows[i].signature,
           duplicateScannerRows[j].signature
@@ -9824,7 +9851,10 @@ async function runImageDuplicateScan(scope='active'){
       if(i%5===0) await new Promise(r=>setTimeout(r,0));
     }
 
-    const similarGroups=duplicateScannerCluster(n,similarPairs);
+    const similarityMode=$("duplicateScannerSensitivity")?.value || "recommended";
+    const similarGroups=similarityMode==="veryStrict"
+      ? duplicateScannerPairwiseGroups(n,similarPairs)
+      : duplicateScannerCluster(n,similarPairs);
     const exactExtras=exactGroups.reduce((sum,g)=>sum+g.length-1,0);
     const similarExtras=similarGroups.reduce((sum,g)=>sum+g.length-1,0);
 
@@ -10151,19 +10181,20 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
     <div id="duplicateScannerHead">
       <div>
         <h3 id="duplicateScannerTitle">Image duplicate scanner</h3>
-        <div id="duplicateScannerIntro">Checks the images already stored in Image Library. Nothing is uploaded and nothing is deleted automatically.</div>
+        <div id="duplicateScannerIntro">Checks images stored locally. Very strict is the default and only flags exact or near-identical matches. Nothing is uploaded or deleted automatically.</div>
       </div>
       <button id="duplicateScannerClose" class="secondary" type="button" aria-label="Close" onclick="closeDuplicateScanner()">×</button>
     </div>
 
     <div id="duplicateScannerToolbar">
-      <button id="duplicateScannerRun" class="secondary" type="button" onclick="runImageDuplicateScan('active')">Scan Image Library</button>
-      <button id="duplicateScannerRunAll" class="secondary" type="button" onclick="runImageDuplicateScan('all')">Scan Image Library + Deleted</button>
+      <button id="duplicateScannerRun" class="secondary" type="button" onclick="runImageDuplicateScan('active')">Scan library</button>
+      <button id="duplicateScannerRunAll" class="secondary" type="button" onclick="runImageDuplicateScan('all')">Scan library + deleted</button>
       <label style="display:flex;align-items:center;gap:6px;font-size:11px">
         Similarity
         <select id="duplicateScannerSensitivity" onchange="if(duplicateScannerRows.length) runImageDuplicateScan(window.duplicateScannerScope||'active')" style="min-height:32px;padding:4px 7px">
+          <option value="veryStrict" selected>Very strict · near-exact</option>
           <option value="strict">Strict</option>
-          <option value="recommended" selected>Recommended</option>
+          <option value="recommended">Recommended</option>
           <option value="loose">More sensitive</option>
         </select>
       </label>
