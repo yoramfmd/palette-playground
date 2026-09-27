@@ -1,0 +1,25 @@
+node_modules/
+dist/
+release/
+out/
+coverage/
+.DS_Store
+*.log
+*.dmg
+*.zip
+*.app
+
+# Never commit local Electron/Chromium storage or user image data.
+IndexedDB/
+Local Storage/
+Session Storage/
+Cache/
+GPUCache/
+backups/
+
+# Local tooling and editor state.
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/

@@ -1,0 +1,30 @@
+{
+  "name": "palette-playground",
+  "version": "90.0.0",
+  "private": true,
+  "description": "Local-first palette generation and artwork recoloring app",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm test",
+    "build:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "39.8.10",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.paletteplayground.app",
+    "productName": "Palette Playground",
+    "asar": true,
+    "files": [
+      "app/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.graphics-design"
+    }
+  }
+}
