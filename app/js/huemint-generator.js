@@ -16,7 +16,6 @@
   const categorySelect = document.getElementById('huemintLocalCategory');
   const templateSelect = document.getElementById('huemintLocalTemplate');
   const modeSelect = document.getElementById('huemintLocalMode');
-  const note = document.getElementById('huemintLocalNote');
   let activeCorpus = [];
   let currentRecord = null;
   let history = [];
@@ -186,7 +185,6 @@
     status.textContent = options.showProgress === false
       ? (message || `Applied ${modeLabels[modeSelect.value]} selection · ${source}`)
       : `${progressLabel()} · ${modeLabels[modeSelect.value]} · ${source}`;
-    note.textContent = `${record.colors.length} original Huemint colors · ${source} · no gradients or interpolation.`;
   }
 
   function renderFavorites() {
@@ -269,7 +267,6 @@
     }
     strip.replaceChildren(makeStrip(currentRecord.colors));
     status.textContent = `${activeCorpus.length} real ${categoryForTemplate(templateSelect.value)} · ${templateLabel(templateSelect.value)} palettes · ${modeLabels[modeSelect.value]} ranking ready`;
-    note.textContent = `${currentRecord.colors.length} original Huemint colors · no gradients or interpolation.`;
     generateButton.disabled = false;
     saveButton.disabled = false;
   }

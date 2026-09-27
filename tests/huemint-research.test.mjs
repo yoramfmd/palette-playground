@@ -152,6 +152,8 @@ test('generator progress follows unique history and the active collection total'
   assert.match(generatorSource, /new Set\(history\.map\(record => record\.id\)\)\.size >= activeCorpus\.length/);
   assert.match(generatorSource, /resetHistory\(null\)/);
   assert.match(generatorSource, /showProgress: false/);
+  assert.doesNotMatch(appSource, /id="huemintLocalNote"/);
+  assert.doesNotMatch(generatorSource, /huemintLocalNote/);
 });
 
 test('app typography follows Huemint Roboto styling including controls', () => {
