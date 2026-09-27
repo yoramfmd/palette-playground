@@ -158,6 +158,16 @@ test('local palette controls follow Huemint button treatment', () => {
   assert.match(appSource, /id="huemintLocalForward"[^>]+aria-label="Next palette"[^>]*>→<\/button>/);
 });
 
+test('design polish keeps layout responsive and interaction state local', () => {
+  assert.match(appSource, /id="designPolishV1Styles"/);
+  assert.match(appSource, /--sidebar-width:clamp\(480px,34vw,600px\)/);
+  assert.match(appSource, /--ui-control-height:46px/);
+  assert.match(appSource, /\.compareStage\.has-expanded/);
+  assert.match(appSource, /id="designPolishV1Script"/);
+  assert.match(appSource, /palettePlaygroundDesignSectionsV1/);
+  assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
+});
+
 test('catalog covers every Huemint navigation template', () => {
   assert.equal(HUEMINT_TEMPLATE_CATALOG.length, 27);
   assert.deepEqual([...new Set(HUEMINT_TEMPLATE_CATALOG.map(item => item.category))], [
