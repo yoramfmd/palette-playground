@@ -205,6 +205,9 @@ test('image workflow provides persistent navigation and accessible artwork contr
   assert.match(appSource, /data-art-pane="original"/);
   assert.match(appSource, /data-art-pane="golden"/);
   assert.match(appSource, /data-art-pane="mixes"/);
+  assert.match(appSource, /const artworkRoot=artHost\.firstElementChild\?\.firstElementChild/);
+  assert.match(appSource, /event\.target===artHost\.firstElementChild \|\| event\.target===artworkRoot/);
+  assert.match(appSource, /Double-click the white background to enlarge or restore all three views/);
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 

@@ -10423,7 +10423,8 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
     pane.setAttribute("aria-label",`${title} artwork preview`);
     pane.setAttribute("aria-pressed","false");
     pane.title=`${title}: click to select · Enter or Space from the keyboard`;
-    if(titleBar) titleBar.title="Double-click to enlarge or restore all three views";
+    if(titleBar) titleBar.title=`${title} artwork preview`;
+    if(artHost) artHost.title="Double-click the white background to enlarge or restore all three views";
     pane.addEventListener("click",()=>activate(pane));
     pane.addEventListener("keydown",event=>{
       if(event.key!=="Enter" && event.key!==" ") return;
@@ -10431,12 +10432,10 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
       activate(pane);
     });
     artHost?.addEventListener("dblclick",event=>{
-      event.preventDefault();
-      event.stopPropagation();
-      activate(pane);
-      fitArtworkPreviews();
-    });
-    titleBar?.addEventListener("dblclick",event=>{
+      const artworkRoot=artHost.firstElementChild?.firstElementChild;
+      const clickedWhiteBackground=event.target===artHost ||
+        event.target===artHost.firstElementChild || event.target===artworkRoot;
+      if(!clickedWhiteBackground) return;
       event.preventDefault();
       event.stopPropagation();
       const expand=!pane.classList.contains("is-expanded");
