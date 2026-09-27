@@ -31,6 +31,7 @@ export function parseCollectorArgs(argv) {
     preset: values.preset ?? 'default',
     mode: values.mode ?? 'transformer',
     temperature: Number(values.temperature ?? 1.3),
+    template: values.template ?? 'website-magazine',
     outputDirectory: values.output ?? 'research/data/huemint'
   };
 }

@@ -149,5 +149,395 @@ window.HUEMINT_LOCAL_CORPUS = [
     "preset": "default",
     "template": "website-magazine",
     "source": "huemint-website-magazine"
+  },
+  {
+    "id": "96506f07bc4acb96b826",
+    "colors": [
+      "#ffffff",
+      "#333157",
+      "#4be1a3",
+      "#e73060",
+      "#f1b537",
+      "#dcdfe4"
+    ],
+    "score": -6.464165210723877,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "07b4b119e5d9aa0179ed",
+    "colors": [
+      "#b7c6f9",
+      "#302741",
+      "#0089d4",
+      "#e70017",
+      "#e2b320",
+      "#d7dbe0"
+    ],
+    "score": -8.997962951660156,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "537e6fc7b79b0f0eccaf",
+    "colors": [
+      "#ffcd00",
+      "#e72277",
+      "#fa870d",
+      "#3090b2",
+      "#e1fbdc",
+      "#f5cc00"
+    ],
+    "score": -9.28750991821289,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "664ce5725eb181752fd4",
+    "colors": [
+      "#fcfffd",
+      "#6744dd",
+      "#fb64a3",
+      "#ff308b",
+      "#edb610",
+      "#f5e1ec"
+    ],
+    "score": -9.282522201538086,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "6e7cb14c009230d9a4e8",
+    "colors": [
+      "#abce68",
+      "#132343",
+      "#e9b9cb",
+      "#5a9fb6",
+      "#eeddcf",
+      "#85c068"
+    ],
+    "score": -8.759033203125,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "7b38e5379304e52bb35e",
+    "colors": [
+      "#efb0bb",
+      "#0f1c43",
+      "#4ea6ee",
+      "#b54544",
+      "#f4f7ff",
+      "#f4a18b"
+    ],
+    "score": -9.097357749938965,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "8aa2b06a3aa84bc0f426",
+    "colors": [
+      "#f3f5fc",
+      "#462d1d",
+      "#009dee",
+      "#d15c36",
+      "#dcb99d",
+      "#c56e32"
+    ],
+    "score": -8.948637008666992,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "b41e7db0f5a646eae428",
+    "colors": [
+      "#fdfdf5",
+      "#0d83c9",
+      "#2cc86f",
+      "#e60054",
+      "#eece00",
+      "#eaebd3"
+    ],
+    "score": -7.396524429321289,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "d3f079fa20f877671b84",
+    "colors": [
+      "#f6f5f5",
+      "#1a2131",
+      "#e7589c",
+      "#f32f27",
+      "#63e1f1",
+      "#ccdedf"
+    ],
+    "score": -8.66928482055664,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "ea0d9130b00aa72bc77c",
+    "colors": [
+      "#fcf4f1",
+      "#193943",
+      "#61caff",
+      "#ea3a39",
+      "#4a4a56",
+      "#cdb3a6"
+    ],
+    "score": -9.208855628967285,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-1",
+    "source": "huemint-illustration-1"
+  },
+  {
+    "id": "e9dde33063bc5a1b1632",
+    "colors": [
+      "#fbfbfb",
+      "#0a0507",
+      "#461c38",
+      "#ff2615",
+      "#f96ed0",
+      "#40ffff",
+      "#73a79a",
+      "#edc81d",
+      "#d4db00",
+      "#1af9fe",
+      "#23d9de"
+    ],
+    "score": -7.006051063537598,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "1c12b4e73cda79e54f80",
+    "colors": [
+      "#f8fefe",
+      "#090100",
+      "#9fdf7a",
+      "#dd462e",
+      "#23abea",
+      "#d7e2e1",
+      "#6ca8e5",
+      "#c8c3bb",
+      "#f8d316",
+      "#fff31c",
+      "#46a54a"
+    ],
+    "score": -8.389608383178711,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "1f22b32686cb403ae78e",
+    "colors": [
+      "#fdffff",
+      "#280045",
+      "#4c2aa3",
+      "#f968b4",
+      "#536b76",
+      "#f3ce3e",
+      "#007649",
+      "#77c1b7",
+      "#857566",
+      "#a9ce5b",
+      "#fad83e"
+    ],
+    "score": -8.60079288482666,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "60508b2851158d395d12",
+    "colors": [
+      "#fdfbff",
+      "#0a0726",
+      "#262876",
+      "#e20736",
+      "#8f9fe3",
+      "#fdc867",
+      "#bba2af",
+      "#25c9ca",
+      "#539f5c",
+      "#72f5b5",
+      "#4be54d"
+    ],
+    "score": -8.499185562133789,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "7467bd234f61eacb5280",
+    "colors": [
+      "#fafffe",
+      "#0b0b44",
+      "#492098",
+      "#fe408c",
+      "#5eb7d2",
+      "#a1cb54",
+      "#61d0ff",
+      "#334969",
+      "#cae19a",
+      "#f4bf4a",
+      "#00a962"
+    ],
+    "score": -8.316587448120117,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "76492c6c8cc5e489430d",
+    "colors": [
+      "#f3543e",
+      "#0df2f5",
+      "#fdd818",
+      "#ffaea2",
+      "#f59025",
+      "#8b0005",
+      "#aa5415",
+      "#754605",
+      "#5d0001",
+      "#0b0000",
+      "#b7100f"
+    ],
+    "score": -8.563972473144531,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "9aaeec8c067147b5cfc6",
+    "colors": [
+      "#fafbff",
+      "#25113a",
+      "#a3af2b",
+      "#fce7e2",
+      "#009ccd",
+      "#00f18c",
+      "#b26a72",
+      "#00cfa6",
+      "#10d8b5",
+      "#aef3bb",
+      "#abffd6"
+    ],
+    "score": -8.380975723266602,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "a53fe7c9341e2b942bd0",
+    "colors": [
+      "#f5fbfd",
+      "#00176c",
+      "#0c17fa",
+      "#f328f4",
+      "#b8c4a0",
+      "#facc71",
+      "#90371c",
+      "#fc7e00",
+      "#fbf658",
+      "#33f5f8",
+      "#c3d83b"
+    ],
+    "score": -8.258450508117676,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "a7764be51ac917998b2c",
+    "colors": [
+      "#fdffff",
+      "#310659",
+      "#0b2a43",
+      "#ea1661",
+      "#50aaeb",
+      "#47fbd3",
+      "#df6988",
+      "#fab261",
+      "#f3e4aa",
+      "#fbe43f",
+      "#23f6f9"
+    ],
+    "score": -7.060959815979004,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
+  },
+  {
+    "id": "cb05f010fb1ebafcd8f1",
+    "colors": [
+      "#fffdff",
+      "#222154",
+      "#47265e",
+      "#fb3e5a",
+      "#009adf",
+      "#00d6c1",
+      "#eb918d",
+      "#28d372",
+      "#fac726",
+      "#f9c100",
+      "#37fb9e"
+    ],
+    "score": -8.021425247192383,
+    "generator": "transformer",
+    "creativity": 1.3,
+    "preset": "default",
+    "template": "illustration-3",
+    "source": "huemint-illustration-3"
   }
 ];

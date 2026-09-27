@@ -17,7 +17,7 @@ export function makeCorpusRecord(result, payload, capturedAt = new Date().toISOS
     template: payload.page,
     adjacency: payload.adjacency.map(Number),
     capturedAt,
-    source: 'huemint-website-magazine'
+    source: `huemint-${payload.page}`
   };
 }
 
@@ -36,10 +36,10 @@ function csvCell(value) {
   return `"${text.replaceAll('"', '""')}"`;
 }
 
-export async function writeCorpus(records, outputDirectory) {
+export async function writeCorpus(records, outputDirectory, corpusName = 'website-magazine') {
   await mkdir(outputDirectory, { recursive: true });
-  const jsonlPath = path.join(outputDirectory, 'website-magazine.jsonl');
-  const csvPath = path.join(outputDirectory, 'website-magazine.csv');
+  const jsonlPath = path.join(outputDirectory, `${corpusName}.jsonl`);
+  const csvPath = path.join(outputDirectory, `${corpusName}.csv`);
   const sorted = [...records].sort((a, b) => a.capturedAt.localeCompare(b.capturedAt) || a.id.localeCompare(b.id));
   const jsonl = `${sorted.map(record => JSON.stringify(record)).join('\n')}\n`;
   const columns = ['id', 'colors', 'score', 'generator', 'creativity', 'preset', 'template', 'adjacency', 'capturedAt', 'source'];

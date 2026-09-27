@@ -1,13 +1,23 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const inputPath = path.resolve('research/data/huemint/website-magazine.jsonl');
+const inputPaths = [
+  path.resolve('research/data/huemint/website-magazine.jsonl'),
+  path.resolve('research/data/huemint/illustration-1.jsonl'),
+  path.resolve('research/data/huemint/illustration-3.jsonl')
+];
 const outputPath = path.resolve('app/js/huemint-corpus.js');
 
-const records = (await readFile(inputPath, 'utf8'))
-  .split(/\r?\n/)
-  .filter(Boolean)
-  .map(line => JSON.parse(line))
+const sources = await Promise.all(inputPaths.map(async inputPath => {
+  try {
+    return await readFile(inputPath, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') return '';
+    throw error;
+  }
+}));
+
+const records = sources.flatMap(source => source.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line)))
   .map(({ id, colors, score, generator, creativity, preset, template, source }) => ({
     id,
     colors,

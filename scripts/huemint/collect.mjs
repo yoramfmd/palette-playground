@@ -1,19 +1,20 @@
 import path from 'node:path';
 import { parseCollectorArgs } from './args.mjs';
-import { createWebsiteMagazineRequest } from '../../research/huemint/config.mjs';
+import { createHuemintRequest } from '../../research/huemint/config.mjs';
 import { requestHuemintPalettes } from '../../research/huemint/client.mjs';
 import { makeCorpusRecord, readCorpus, writeCorpus } from '../../research/huemint/corpus.mjs';
 
 const options = parseCollectorArgs(process.argv.slice(2));
 const outputDirectory = path.resolve(options.outputDirectory);
-const jsonlPath = path.join(outputDirectory, 'website-magazine.jsonl');
+const jsonlPath = path.join(outputDirectory, `${options.template}.jsonl`);
 const existing = await readCorpus(jsonlPath);
 const recordsById = new Map(existing.map(record => [record.id, record]));
 let received = 0;
 let added = 0;
 
 for (let requestIndex = 0; requestIndex < options.requests && added < options.maxPalettes; requestIndex += 1) {
-  const payload = createWebsiteMagazineRequest({
+  const payload = createHuemintRequest({
+    template: options.template,
     mode: options.mode,
     preset: options.preset,
     temperature: options.temperature,
@@ -32,15 +33,16 @@ for (let requestIndex = 0; requestIndex < options.requests && added < options.ma
 
   // Persist after every successful request so an interrupted run can resume
   // from the last completed batch without losing collected palettes.
-  await writeCorpus([...recordsById.values()], outputDirectory);
+  await writeCorpus([...recordsById.values()], outputDirectory, options.template);
 
   if (requestIndex + 1 < options.requests && added < options.maxPalettes) {
     await new Promise(resolve => setTimeout(resolve, options.delayMs));
   }
 }
 
-const files = await writeCorpus([...recordsById.values()], outputDirectory);
+const files = await writeCorpus([...recordsById.values()], outputDirectory, options.template);
 console.log(JSON.stringify({
+  template: options.template,
   requests: options.requests,
   delayMs: options.delayMs,
   received,

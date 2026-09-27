@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { createWebsiteMagazineRequest, HUEMINT_API_URL } from '../research/huemint/config.mjs';
+import { createIllustration3Request, createIllustrationRequest, createWebsiteMagazineRequest, HUEMINT_API_URL, ILLUSTRATION_1_DEFAULT_MATRIX, ILLUSTRATION_3_DEFAULT_MATRIX } from '../research/huemint/config.mjs';
 import { normalizeHuemintResponse, requestHuemintPalettes } from '../research/huemint/client.mjs';
 import { makeCorpusRecord, paletteId } from '../research/huemint/corpus.mjs';
 import { selectRealHuemintPalette } from '../research/huemint/local-engine.mjs';
@@ -26,6 +26,26 @@ test('Huemint response validation accepts only four valid hex colors', () => {
     results: [{ palette: ['#FFFFFF', '#f4957a', '#00143b', '#a1cfa5'], score: -7.5 }]
   }), [{ colors: ['#ffffff', '#f4957a', '#00143b', '#a1cfa5'], score: -7.5 }]);
   assert.throws(() => normalizeHuemintResponse({ results: [{ palette: ['red'] }] }));
+});
+
+test('Illustration 1 request uses Huemint current six-color contrast graph', () => {
+  const payload = createIllustrationRequest();
+  assert.equal(payload.page, 'illustration-1');
+  assert.equal(payload.num_colors, 6);
+  assert.equal(payload.adjacency.length, 36);
+  assert.deepEqual(payload.adjacency.map(Number), ILLUSTRATION_1_DEFAULT_MATRIX);
+  assert.equal(normalizeHuemintResponse({
+    results: [{ palette: ['#ffffff', '#111111', '#ff0000', '#00ff00', '#0000ff', '#ffff00'] }]
+  }, 6)[0].colors.length, 6);
+});
+
+test('Illustration 3 request uses Huemint current eleven-color role graph', () => {
+  const payload = createIllustration3Request();
+  assert.equal(payload.page, 'illustration-3');
+  assert.equal(payload.num_colors, 11);
+  assert.equal(payload.palette.length, 11);
+  assert.equal(payload.adjacency.length, 121);
+  assert.deepEqual(payload.adjacency.map(Number), ILLUSTRATION_3_DEFAULT_MATRIX);
 });
 
 test('API client sends a POST to the page proxy with browser-origin headers', async () => {
@@ -66,6 +86,7 @@ test('collector enforces bounded requests, delay, and palette count', () => {
     preset: 'default',
     mode: 'transformer',
     temperature: 1.3,
+    template: 'website-magazine',
     outputDirectory: 'research/data/huemint'
   });
   assert.throws(() => parseCollectorArgs([`--requests=${COLLECTION_LIMITS.maxRequestsPerRun + 1}`]));
@@ -94,5 +115,7 @@ test('research preview uses only the captured local corpus', () => {
   assert.match(generatorSource, /applyListPaletteToAllThreeWindows/);
   assert.doesNotMatch(generatorSource, /fetch\s*\(/);
   assert.doesNotMatch(generatorSource, /Math\.random/);
+  assert.doesNotMatch(generatorSource, /mixHex/);
+  assert.match(generatorSource, /directPaletteForSlots/);
   assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
 });

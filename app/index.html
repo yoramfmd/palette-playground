@@ -2073,17 +2073,23 @@ button{touch-action:manipulation;}
     <div class="huemintResearchHead">
       <div>
         <div id="huemintLocalTitle" class="huemintResearchTitle">Palette Generator</div>
-        <div class="huemintResearchSub">Website Magazine · local Huemint research corpus</div>
+        <div class="huemintResearchSub">Real palettes captured from Huemint · local research corpus</div>
       </div>
       <span class="huemintResearchBadge">Research</span>
     </div>
+    <label for="huemintLocalTemplate">Template</label>
+    <select id="huemintLocalTemplate">
+      <option value="illustration-3" selected>Illustration 3 · 10 direct artwork colors</option>
+      <option value="illustration-1">Illustration 1 · 6 creative colors</option>
+      <option value="website-magazine">Website Magazine · 4 core colors</option>
+    </select>
     <div id="huemintLocalPalette" aria-label="Current Huemint palette"></div>
     <div class="huemintLocalActions">
       <button id="huemintLocalGenerate" type="button">Generate</button>
       <button id="huemintLocalSaveFavorite" class="secondary" type="button">Save favorite</button>
     </div>
     <div id="huemintLocalStatus" class="huemintLocalStatus">Loading local palettes…</div>
-    <div class="huemintLocalNote">Each result keeps Huemint’s original 4-color palette. Palette Playground expands it to the current working slot count when applied.</div>
+    <div class="huemintLocalNote">Direct mode never mixes neighboring colors. For 10-slot artwork, Illustration 3 selects 10 of Huemint’s 11 original role-based colors without generating gradients.</div>
     <div>
       <div class="comparePaletteLabel" style="margin-bottom:7px">Favorites</div>
       <div id="huemintLocalFavorites" class="huemintLocalFavorites"></div>
