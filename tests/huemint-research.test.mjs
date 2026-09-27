@@ -193,6 +193,21 @@ test('design polish keeps layout responsive and interaction state local', () => 
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
+test('image workflow provides persistent navigation and accessible artwork controls', () => {
+  assert.match(appSource, /class="sidebarQuickNav"/);
+  assert.match(appSource, /data-scroll-target="paletteSection"/);
+  assert.match(appSource, /data-scroll-target="imageLibrarySection"/);
+  assert.match(appSource, /data-scroll-target="recolorSection"/);
+  assert.match(appSource, /window\.palettePlaygroundScrollSidebarTo=scrollSidebarTo/);
+  assert.match(appSource, /card\.addEventListener\("dblclick"/);
+  assert.match(appSource, /id="fit"[^>]*>Fit artwork<\/button>/);
+  assert.match(appSource, /if\(!e\.ctrlKey && !e\.metaKey\) return/);
+  assert.match(appSource, /data-art-pane="original"/);
+  assert.match(appSource, /data-art-pane="golden"/);
+  assert.match(appSource, /data-art-pane="mixes"/);
+  assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
+});
+
 test('duplicate scanner offers a near-exact default without automatic deletion', () => {
   assert.match(appSource, /<option value="veryStrict" selected>Very strict · near-exact<\/option>/);
   assert.match(appSource, /metrics\.meanDiff<=2\.2/);

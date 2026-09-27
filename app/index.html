@@ -716,11 +716,11 @@ button.accent:disabled{
 
 
 <style id="v12_77_mouse_zoom">
-#host,#hostImageCompare{
+#host,#hostCleanOnly,#hostImageCompare{
   overscroll-behavior:contain;
 }
-#host:hover,#hostImageCompare:hover{
-  cursor:zoom-in;
+#host:hover,#hostCleanOnly:hover,#hostImageCompare:hover{
+  cursor:pointer;
 }
 </style>
 
@@ -2350,20 +2350,40 @@ button{
   border-radius:14px;
   transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
 }
-.artPane:hover{border-color:#c7c4bd}
+.artPane:hover{
+  border-color:#aeb7bf;
+  box-shadow:0 3px 14px rgba(50,60,70,.07);
+}
+.artPane:focus-visible{
+  outline:3px solid rgba(72,92,111,.2);
+  outline-offset:3px;
+}
 .artPane.is-active{
-  border-color:#8595a5;
-  box-shadow:0 0 0 3px rgba(80,104,129,.12);
+  border-color:#66798a;
+  box-shadow:0 0 0 3px rgba(80,104,129,.14);
 }
 .artPaneTitle{
   min-height:42px;
   padding:11px 14px!important;
   display:flex;
   align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
 }
 .artPane.is-active .artPaneTitle{
   color:#334250;
   background:#f8fafb;
+}
+.artPane.is-active .artPaneTitle::after{
+  content:"Selected";
+  padding:3px 7px;
+  border-radius:999px;
+  background:#e7edf1;
+  color:#4d6070;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:none;
 }
 .artHost{padding:10px!important}
 .compareStage.has-expanded{grid-template-columns:1fr}
@@ -2568,6 +2588,39 @@ button{
 @media(max-width:520px){
   .imagePaletteTop{align-items:flex-start;flex-direction:column}
 }
+
+.sidebarQuickNav{
+  position:sticky;
+  top:0;
+  z-index:60;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px;
+  margin:10px 0 14px;
+  padding:4px;
+  border:1px solid #dad8d2;
+  border-radius:12px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 4px 14px rgba(39,45,52,.07);
+  backdrop-filter:blur(12px);
+}
+.sidebarQuickNav button{
+  min-height:34px!important;
+  padding:6px 8px!important;
+  border:0!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  color:#626a72!important;
+  box-shadow:none!important;
+  font-size:11px!important;
+  font-weight:650!important;
+}
+.sidebarQuickNav button:hover{background:#f1f1ee!important;color:#30363b!important}
+.sidebarQuickNav button.is-current{
+  background:#414345!important;
+  color:#fff!important;
+}
+#paletteSection,#imageLibrarySection,#recolorSection{scroll-margin-top:62px}
 </style>
 </head>
 <body>
@@ -2575,11 +2628,13 @@ button{
 <aside class="side">
 <div class="sub">Upload any SVG of your own into a fresh white workspace, then browse a large palette library where every palette is expanded to 10 colors. The artwork stays fixed on the right while controls scroll on the left. You can also hold <span class="hotkey">Space</span> to keep shuffling, similar to Coolors.</div>
 
+<nav class="sidebarQuickNav" aria-label="Quick workspace navigation">
+  <button type="button" class="is-current" data-scroll-target="paletteSection" aria-current="true">Palette</button>
+  <button type="button" data-scroll-target="imageLibrarySection">Images</button>
+  <button type="button" data-scroll-target="recolorSection">Recolor</button>
+</nav>
 
-
-
-
-<section class="sec">
+<section class="sec" id="paletteSection">
 <div class="tt">Palette</div>
 <label class="hideClean">Coolors URL or color list</label>
 <input id="paletteInput" type="text" value="https://coolors.co/271f30-6c5a49-c8ad55-d0fcb3-9bc59d-a4caa6-accfae-b4d3b5-bbd7bc-c1dbc2">
@@ -2702,7 +2757,7 @@ button{
     </div>
   </section>
 
-  <div class="imageLibraryBox">
+  <div class="imageLibraryBox" id="imageLibrarySection">
     <div class="imageLibraryHeader">
       <div>
         <div class="comparePaletteLabel">Image library</div>
@@ -2787,7 +2842,7 @@ button{
 </section>
 
 
-<section class="sec">
+<section class="sec" id="recolorSection">
 <div class="tt">Recolor</div>
 <label>Mapping method</label>
 <select id="mode">
@@ -2844,21 +2899,22 @@ button{
 <div id="status" class="status">Artwork loaded.</div>
 <input id="uploadSvgInput" type="file" accept=".svg,image/svg+xml" style="display:none">
 <button id="uploadSvgBtn" class="accent">Upload My SVG</button>
+<button id="fit" class="secondary" type="button" title="Fit all artwork previews">Fit artwork</button>
 <button id="exportSvg" class="secondary">Export SVG</button>
 <button id="exportPng" class="secondary">Export PNG</button>
 </div>
 <div class="stage compareStage">
-  <div class="artPane">
-    <div class="artPaneTitle">MIXES</div>
-    <div class="artHost"><div id="host"></div></div>
+  <div class="artPane" data-art-pane="original">
+    <div class="artPaneTitle">ORIGINAL</div>
+    <div class="artHost"><div id="hostImageCompare"></div></div>
   </div>
-  <div class="artPane">
+  <div class="artPane" data-art-pane="golden">
     <div class="artPaneTitle">GOLDEN</div>
     <div class="artHost"><div id="hostCleanOnly"></div></div>
   </div>
-  <div class="artPane">
-    <div class="artPaneTitle">ORIGINAL</div>
-    <div class="artHost"><div id="hostImageCompare"></div></div>
+  <div class="artPane" data-art-pane="mixes">
+    <div class="artPaneTitle">MIXES</div>
+    <div class="artHost"><div id="host"></div></div>
   </div>
 </div>
 </main>
@@ -3128,7 +3184,7 @@ let spaceHeld=false;
 
 const $=id=>document.getElementById(id);
 
-let artworkZoom=0.6588;
+let artworkZoom=0.9;
 const ZOOM_MIN=0.25, ZOOM_MAX=4, ZOOM_STEP=0.10;
 function setArtworkZoom(next){
   artworkZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,Number(next)||1));
@@ -3144,6 +3200,17 @@ function setArtworkZoom(next){
   });
 }
 
+function fitArtworkPreviews(){
+  setArtworkZoom(.9);
+  ["host","hostCleanOnly","hostImageCompare"].forEach(id=>{
+    const host=$(id);
+    if(!host) return;
+    host.scrollLeft=0;
+    host.scrollTop=0;
+  });
+  if($("status")) $("status").textContent="Artwork fitted to all three previews.";
+}
+
 function bindWheelZoom(){
   ["host","hostCleanOnly","hostImageCompare"].forEach(id=>{
     const host=$(id);
@@ -3152,12 +3219,15 @@ function bindWheelZoom(){
     host.dataset.wheelZoomBound="1";
     host.addEventListener("wheel",e=>{
       if(!svg && !cleanOnlySvg && !imageCompareSvg) return;
+      if(!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const step=e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
       setArtworkZoom(artworkZoom + step);
     },{passive:false});
   });
 }
+
+$("fit")?.addEventListener("click",fitArtworkPreviews);
 
 function decode64(s){ return decodeURIComponent(escape(atob(s))); }
 
@@ -8561,7 +8631,7 @@ async function renderImageLibrary(options={}){
         card.dataset.imageName=item.name||"Saved image";
         if(selectedLibraryImageIds.has(item.id)) card.classList.add("imageLibrarySelected");
         if(activeLibraryPreviewImageId===item.id) card.classList.add("activePaletteImage");
-        card.title=`Click to load ${item.name} · Use ← → to browse after selecting · Shift-click for range selection · Ctrl/Cmd-click for add/remove selection`;
+        card.title=`Click to load ${item.name} · Double-click to edit its palette · Use ← → to browse after selecting · Shift-click for range selection · Ctrl/Cmd-click for add/remove selection`;
 
         const img=document.createElement("img");
         img.src=item.dataUrl;
@@ -8594,6 +8664,12 @@ async function renderImageLibrary(options={}){
           }
           closePermanentDeleteMenu();
           loadLibraryImageIntoPalette(item,"active");
+        });
+
+        card.addEventListener("dblclick",e=>{
+          if(isLibraryRangeSelectEvent(e) || isLibraryMultiSelectEvent(e)) return;
+          e.preventDefault();
+          window.palettePlaygroundScrollSidebarTo?.("paletteSection");
         });
 
         card.draggable=true;
@@ -10278,15 +10354,86 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
     });
   });
 
+  const side=document.querySelector(".side");
+  const quickNav=document.querySelector(".sidebarQuickNav");
+  const quickNavItems=[...document.querySelectorAll(".sidebarQuickNav [data-scroll-target]")]
+    .map(button=>({button,target:document.getElementById(button.dataset.scrollTarget)}))
+    .filter(item=>item.target);
+
+  const setCurrentQuickNav=activeItem=>{
+    quickNavItems.forEach(item=>{
+      const active=item===activeItem;
+      item.button.classList.toggle("is-current",active);
+      if(active) item.button.setAttribute("aria-current","true");
+      else item.button.removeAttribute("aria-current");
+    });
+  };
+
+  const scrollSidebarTo=(targetId,behavior="smooth")=>{
+    const target=document.getElementById(targetId);
+    if(!side || !target) return;
+    const parentSection=target.closest(".sec");
+    if(parentSection?.classList.contains("is-collapsed")){
+      parentSection.classList.remove("is-collapsed");
+      parentSection.querySelector(":scope>.tt")?.setAttribute("aria-expanded","true");
+      saveSections();
+    }
+    const sideRect=side.getBoundingClientRect();
+    const targetTop=target.getBoundingClientRect().top-sideRect.top+side.scrollTop;
+    const top=Math.max(0,targetTop-(quickNav?.offsetHeight||0)-12);
+    side.scrollTo({top,behavior});
+    const activeItem=quickNavItems.find(item=>item.target===target);
+    if(activeItem) setCurrentQuickNav(activeItem);
+  };
+  window.palettePlaygroundScrollSidebarTo=scrollSidebarTo;
+
+  quickNavItems.forEach(item=>item.button.addEventListener("click",()=>{
+    scrollSidebarTo(item.target.id);
+  }));
+
+  let quickNavFrame=0;
+  side?.addEventListener("scroll",()=>{
+    if(quickNavFrame) return;
+    quickNavFrame=requestAnimationFrame(()=>{
+      quickNavFrame=0;
+      const marker=(quickNav?.getBoundingClientRect().bottom||0)+86;
+      let current=quickNavItems[0];
+      quickNavItems.forEach(item=>{
+        if(item.target.getBoundingClientRect().top<=marker) current=item;
+      });
+      if(current) setCurrentQuickNav(current);
+    });
+  },{passive:true});
+
   const stage=document.querySelector(".compareStage");
   const panes=[...document.querySelectorAll(".compareStage>.artPane")];
-  const activate=pane=>panes.forEach(item=>item.classList.toggle("is-active",item===pane));
+  const activate=pane=>panes.forEach(item=>{
+    const active=item===pane;
+    item.classList.toggle("is-active",active);
+    item.setAttribute("aria-pressed",String(active));
+  });
   panes.forEach(pane=>{
     const titleBar=pane.querySelector(".artPaneTitle");
+    const artHost=pane.querySelector(".artHost");
     const title=titleBar?.textContent.trim()||"Artwork";
-    pane.title=`${title}: click to select`;
+    pane.setAttribute("role","button");
+    pane.setAttribute("tabindex","0");
+    pane.setAttribute("aria-label",`${title} artwork preview`);
+    pane.setAttribute("aria-pressed","false");
+    pane.title=`${title}: click to select · Enter or Space from the keyboard`;
     if(titleBar) titleBar.title="Double-click to enlarge or restore all three views";
     pane.addEventListener("click",()=>activate(pane));
+    pane.addEventListener("keydown",event=>{
+      if(event.key!=="Enter" && event.key!==" ") return;
+      event.preventDefault();
+      activate(pane);
+    });
+    artHost?.addEventListener("dblclick",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      activate(pane);
+      fitArtworkPreviews();
+    });
     titleBar?.addEventListener("dblclick",event=>{
       event.preventDefault();
       event.stopPropagation();
@@ -10297,7 +10444,14 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
       activate(pane);
     });
   });
-  if(panes.length) activate(panes[panes.length-1]);
+  const originalPane=panes.find(pane=>pane.dataset.artPane==="original");
+  if(originalPane || panes.length) activate(originalPane || panes[0]);
+
+  document.addEventListener("keydown",event=>{
+    if(event.key!=="Escape" || !stage?.classList.contains("has-expanded")) return;
+    panes.forEach(item=>item.classList.remove("is-expanded"));
+    stage.classList.remove("has-expanded");
+  });
 
   document.querySelector(".paletteMatrixViewport")?.addEventListener("pointerleave",clearPaletteMatrixPreview);
 })();
