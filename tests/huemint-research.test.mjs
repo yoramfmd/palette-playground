@@ -208,6 +208,16 @@ test('palette matching controls remove the duplicate mode and group advanced cho
   assert.match(appSource, /mode==="original" \|\| mode==="perceptualOnly"/);
 });
 
+test('palette list favorites are additive, local, and filterable', () => {
+  assert.match(appSource, /id="favoritePalette"[^>]*>☆ Save favorite<\/button>/);
+  assert.match(appSource, /palettePlaygroundListFavoritesV1/);
+  assert.match(appSource, /function toggleSelectedPaletteFavorite\(\)/);
+  assert.match(appSource, /Favorites \(\$\{favoriteCount\}\)/);
+  assert.match(appSource, /★ Remove favorite/);
+  assert.match(appSource, /aria-pressed/);
+  assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
+});
+
 test('catalog covers every Huemint navigation template', () => {
   assert.equal(HUEMINT_TEMPLATE_CATALOG.length, 27);
   assert.deepEqual([...new Set(HUEMINT_TEMPLATE_CATALOG.map(item => item.category))], [

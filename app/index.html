@@ -1200,6 +1200,17 @@ body.goldenDialogDragging *{
   opacity:.42;
   cursor:default;
 }
+.paletteActionSecondaryRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%;
+}
+#favoritePalette.is-saved{
+  background:#3f4143!important;
+  border-color:#3f4143!important;
+  color:#fff!important;
+}
 </style>
 
 
@@ -2665,6 +2676,9 @@ button{
       <button id="randomPalette" class="secondary">Random palette</button>
       <button id="randomPaletteBack" class="secondary" type="button" disabled>← Back</button>
       <button id="randomPaletteForward" class="secondary" type="button" disabled>Forward →</button>
+    </div>
+    <div class="paletteActionSecondaryRow">
+      <button id="favoritePalette" class="secondary" type="button">☆ Save favorite</button>
       <button id="deletePalette" class="secondary">Delete palette</button>
     </div>
     <button id="reloadLibrary" class="secondary">Reload online palettes</button>
@@ -4815,6 +4829,8 @@ async function loadExternalPaletteLibrary(){
 
 
 const DELETED_PALETTES_KEY="palettePlaygroundDeletedPalettesV1";
+const FAVORITE_PALETTES_KEY="palettePlaygroundListFavoritesV1";
+const FAVORITE_PALETTES_FILTER="__favorites";
 
 function paletteId(item){
   const [name,category,colors]=item;
@@ -4833,6 +4849,63 @@ function saveDeletedPaletteIds(set){
   try{
     localStorage.setItem(DELETED_PALETTES_KEY, JSON.stringify([...set]));
   }catch(err){}
+}
+
+function loadFavoritePaletteIds(){
+  try{
+    return new Set(JSON.parse(localStorage.getItem(FAVORITE_PALETTES_KEY)||"[]"));
+  }catch(err){
+    return new Set();
+  }
+}
+
+function saveFavoritePaletteIds(set){
+  try{
+    localStorage.setItem(FAVORITE_PALETTES_KEY,JSON.stringify([...set]));
+  }catch(err){}
+}
+
+function selectedPaletteItem(){
+  const value=$("paletteSelect")?.value;
+  if(value==null || value==="") return null;
+  const idx=Number(value);
+  return Number.isInteger(idx) ? ALL_PALETTES[idx] || null : null;
+}
+
+function updatePaletteFavoriteButton(){
+  const button=$("favoritePalette");
+  if(!button) return;
+  const item=selectedPaletteItem();
+  const isSaved=Boolean(item && loadFavoritePaletteIds().has(paletteId(item)));
+  button.disabled=!item;
+  button.classList.toggle("is-saved",isSaved);
+  button.textContent=isSaved ? "★ Remove favorite" : "☆ Save favorite";
+  button.setAttribute("aria-pressed",String(isSaved));
+}
+
+function toggleSelectedPaletteFavorite(){
+  const item=selectedPaletteItem();
+  if(!item) return;
+  const [name,category]=item;
+  const id=paletteId(item);
+  const favorites=loadFavoritePaletteIds();
+  const removing=favorites.has(id);
+  if(removing) favorites.delete(id);
+  else favorites.add(id);
+  saveFavoritePaletteIds(favorites);
+
+  const filter=$("categoryFilter");
+  const wasFavorites=filter?.value===FAVORITE_PALETTES_FILTER;
+  populateCategoryFilter();
+  if(wasFavorites){
+    if(filter) filter.value=FAVORITE_PALETTES_FILTER;
+    buildPaletteSelect();
+    if($("paletteSelect")?.options.length) useSelectedPalette();
+  }
+  updatePaletteFavoriteButton();
+  $("status").textContent=removing
+    ? `Removed favorite: ${name} · ${category}`
+    : `Saved favorite: ${name} · ${category}`;
 }
 
 function applyDeletedPaletteFilter(){
@@ -4950,6 +5023,13 @@ function populateCategoryFilter(){
   allOpt.textContent="All categories";
   filter.appendChild(allOpt);
 
+  const favoriteIds=loadFavoritePaletteIds();
+  const favoriteCount=ALL_PALETTES.filter(item=>favoriteIds.has(paletteId(item))).length;
+  const favoritesOpt=document.createElement("option");
+  favoritesOpt.value=FAVORITE_PALETTES_FILTER;
+  favoritesOpt.textContent=`Favorites (${favoriteCount})`;
+  filter.appendChild(favoritesOpt);
+
   const colorGroup=document.createElement("optgroup");
   colorGroup.label="By color";
   availableColorCats.forEach(fam=>{
@@ -4970,18 +5050,22 @@ function populateCategoryFilter(){
   });
   filter.appendChild(styleGroup);
 
-  const validValues=["All",...styleCats,...availableColorCats.map(c=>"color:"+c)];
+  const validValues=["All",FAVORITE_PALETTES_FILTER,...styleCats,...availableColorCats.map(c=>"color:"+c)];
   filter.value=validValues.includes(current)?current:"All";
 }
 function buildPaletteSelect(){
   const select=$("paletteSelect");
   const filter=$("categoryFilter");
   const selectedCategory = filter ? (filter.value||"All") : "All";
+  const favoriteIds=loadFavoritePaletteIds();
   const previousValue=select.value;
   select.innerHTML="";
   const byCat={};
   ALL_PALETTES.forEach(([name,category,colors],idx)=>{
-    if(!paletteMatchesSelectedCategory(category,colors,selectedCategory)) return;
+    const item=ALL_PALETTES[idx];
+    if(selectedCategory===FAVORITE_PALETTES_FILTER){
+      if(!favoriteIds.has(paletteId(item))) return;
+    }else if(!paletteMatchesSelectedCategory(category,colors,selectedCategory)) return;
     if(!byCat[category]) byCat[category]=[];
     byCat[category].push([name,category,colors,idx]);
   });
@@ -5001,6 +5085,7 @@ function buildPaletteSelect(){
   const restored = select.querySelector('option[value="'+previousValue+'"]');
   if(restored) select.value=previousValue;
   else if(select.options.length) select.selectedIndex=0;
+  updatePaletteFavoriteButton();
 }
 
 function syncAllThreeWindowsFromCurrentPalette(options={}){
@@ -5173,6 +5258,7 @@ function applyListPaletteToAllThreeWindows(colors,options={}){
 }
 
 function applyPaletteIndexToAllThreeWindows(index){
+  if(index==null || String(index)==="") return false;
   const idx=Number(index);
   if(!Number.isInteger(idx) || !ALL_PALETTES[idx]) return false;
   const [, , colors]=ALL_PALETTES[idx];
@@ -5184,6 +5270,7 @@ function useSelectedPalette(){
   const select=$("paletteSelect");
   if(!select) return;
   if(!applyPaletteIndexToAllThreeWindows(select.value)) return;
+  updatePaletteFavoriteButton();
   $("status").textContent="Palette applied to ORIGINAL, GOLDEN, and MIXES, artwork + palette rows.";
 }
 
@@ -8944,6 +9031,7 @@ $("randomPalette").onclick=randomPalette;
 $("randomPaletteBack").onclick=()=>goRandomPaletteHistory(-1);
 $("randomPaletteForward").onclick=()=>goRandomPaletteHistory(1);
 updateRandomPaletteHistoryButtons();
+$("favoritePalette").onclick=toggleSelectedPaletteFavorite;
 $("deletePalette").onclick=deleteSelectedPalette;
 
 $("generatePromptPalette").onclick=applyGeneratedPromptPalette;
