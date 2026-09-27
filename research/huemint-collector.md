@@ -39,3 +39,41 @@ Candidate record shape:
 3. Add deterministic tests for record validation and export.
 4. Run a bounded collection sample.
 5. Evaluate palette quality and dataset bias before designing a local mimic.
+
+## Current finding
+
+The older documented endpoint, `https://api.huemint.com/color`, returned HTTP 405 during earlier experiments. The current Website Magazine page source instead posts to the same-origin route:
+
+```text
+POST https://huemint.com/api/
+```
+
+The live page includes `page: "website-magazine"` and `preset` in addition to the documented generation fields. A bounded probe on 2026-09-27 returned HTTP 200 and ten valid four-color palettes. This route is used only from the isolated research tooling; it is not a stable application dependency.
+
+## Bounded collection commands
+
+One API probe:
+
+```sh
+npm run huemint:probe
+```
+
+One collection request, capped at ten new palettes:
+
+```sh
+npm run huemint:collect -- --requests=1 --delay-ms=5000 --max-palettes=10
+```
+
+Safety limits enforced by the collector:
+
+- no more than 10 requests in one run
+- at least 2 seconds between requests; 5 seconds by default
+- no more than 100 new palettes in one run
+- 20-second request timeout
+- at most two retries with exponential backoff for rate limits and server errors
+- save after each successful request so an interrupted run is resumable
+- deduplicate by a stable hash of the complete ordered palette
+
+## Local engine rule
+
+The first local-engine stage is deliberately corpus-only. It selects a complete palette captured from Huemint and never calls `Math.random`, invents a HEX value, or synthesizes a replacement color. Controlled variations and 10-color expansion are deferred until a sufficiently broad Website Magazine and Gradient-10 corpus exists.
