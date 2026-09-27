@@ -9,6 +9,8 @@
   const strip = document.getElementById('huemintLocalPalette');
   const status = document.getElementById('huemintLocalStatus');
   const generateButton = document.getElementById('huemintLocalGenerate');
+  const backButton = document.getElementById('huemintLocalBack');
+  const forwardButton = document.getElementById('huemintLocalForward');
   const saveButton = document.getElementById('huemintLocalSaveFavorite');
   const favoritesBox = document.getElementById('huemintLocalFavorites');
   const categorySelect = document.getElementById('huemintLocalCategory');
@@ -18,6 +20,8 @@
   let activeCorpus = [];
   let currentRecord = null;
   let recentIds = [];
+  let history = [];
+  let historyIndex = -1;
 
   const modeLabels = {
     creative: 'Creative',
@@ -132,6 +136,25 @@
     recentIds = [...recentIds.filter(id => id !== record.id), record.id].slice(-4);
   }
 
+  function updateHistoryButtons() {
+    backButton.disabled = historyIndex <= 0;
+    forwardButton.disabled = historyIndex < 0 || historyIndex >= history.length - 1;
+  }
+
+  function resetHistory(record) {
+    history = record ? [record] : [];
+    historyIndex = record ? 0 : -1;
+    updateHistoryButtons();
+  }
+
+  function addToHistory(record) {
+    if (history[historyIndex]?.id === record.id) return;
+    history = history.slice(0, historyIndex + 1);
+    history.push(record);
+    historyIndex = history.length - 1;
+    updateHistoryButtons();
+  }
+
   function readFavorites() {
     try {
       const parsed = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
@@ -164,7 +187,7 @@
     return row;
   }
 
-  function applyRecord(record, message) {
+  function applyRecord(record, message, options = {}) {
     if (!record) return;
     currentRecord = record;
     strip.replaceChildren(makeStrip(record.colors));
@@ -172,6 +195,7 @@
       window.applyListPaletteToAllThreeWindows(directPaletteForSlots(record.colors), { direct: true });
     }
     rememberRecord(record);
+    if (options.trackHistory !== false) addToHistory(record);
     const source = `${categoryForTemplate(record.template)} · ${templateLabel(record.template)}`;
     status.textContent = message || `Applied ${modeLabels[modeSelect.value]} selection · ${source}`;
     note.textContent = `${record.colors.length} original Huemint colors · ${source} · no gradients or interpolation.`;
@@ -245,6 +269,7 @@
     activeCorpus = corpus.filter(record => record.template === templateSelect.value);
     recentIds = [];
     currentRecord = activeCorpus[0] || null;
+    resetHistory(currentRecord);
     if (!currentRecord) {
       strip.replaceChildren();
       status.textContent = `No captured palettes for ${templateLabel(templateSelect.value)}.`;
@@ -276,6 +301,20 @@
 
   generateButton.addEventListener('click', () => {
     applyRecord(chooseNextRecord());
+  });
+
+  backButton.addEventListener('click', () => {
+    if (historyIndex <= 0) return;
+    historyIndex -= 1;
+    applyRecord(history[historyIndex], 'Returned to previous generated palette', { trackHistory: false });
+    updateHistoryButtons();
+  });
+
+  forwardButton.addEventListener('click', () => {
+    if (historyIndex >= history.length - 1) return;
+    historyIndex += 1;
+    applyRecord(history[historyIndex], 'Moved forward to next generated palette', { trackHistory: false });
+    updateHistoryButtons();
   });
 
   saveButton.addEventListener('click', () => {
