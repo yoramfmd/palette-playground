@@ -264,6 +264,18 @@ test('palette matrix aligns roles and exposes RGB values without a persistent re
   assert.doesNotMatch(appSource, /id="paletteMatrixCopy"/);
 });
 
+test('replacement dialogs prioritize recommendations and keep the full catalog manageable', () => {
+  assert.match(appSource, /data-replace-view="recommended"/);
+  assert.match(appSource, /data-replace-view="all"/);
+  assert.match(appSource, /data-replace-view="recent"/);
+  assert.match(appSource, /id="goldenReplaceFamily"/);
+  assert.match(appSource, /id="goldenReplaceCount"/);
+  assert.match(appSource, /function replaceRecommendationRows/);
+  assert.match(appSource, /function rememberReplaceColor/);
+  assert.match(appSource, />Use automatic match<\/button>/);
+  assert.match(appSource, /The explicit X is the only close action/);
+});
+
 test('palette matching controls remove the duplicate mode and group advanced choices', () => {
   assert.match(appSource, /<option value="original" selected>Dominant Colors<\/option>/);
   assert.match(appSource, /<option value="keyColors">Distinct Key Colors<\/option>/);

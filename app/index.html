@@ -120,28 +120,42 @@ button:disabled{opacity:.35;cursor:default}
 .comparePaletteItem.isGoldenEditable .comparePaletteSwatch{cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.05) inset}
 .comparePaletteItem.isGoldenEditable .comparePaletteSwatch:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.10)}
 .comparePaletteItem.isGoldenEditable .comparePaletteCode{cursor:pointer}
-#goldenReplaceOverlay{position:fixed;inset:0;background:transparent;display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;pointer-events:none}
+#goldenReplaceOverlay{position:fixed;inset:0;background:rgba(31,41,51,.08);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;pointer-events:auto}
 #goldenReplaceOverlay.open{display:flex}
-#goldenReplaceDialog{width:min(1240px,96vw);max-height:92vh;min-width:420px;min-height:280px;overflow:auto;resize:both;background:#fbfbf8;border:1px solid #d8d7cf;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.18);display:flex;flex-direction:column;pointer-events:auto}
-#goldenReplaceHead{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px 18px;border-bottom:1px solid #ecebe4}
-#goldenReplaceTitle{font-size:22px;font-weight:800;letter-spacing:.02em;color:#30343b}
-#goldenReplaceClose{border:1px solid #d8d7cf;background:#f2f2ed;border-radius:12px;width:42px;height:42px;font-size:22px;cursor:pointer}
-#goldenReplaceBody{padding:14px 18px 18px 18px;display:flex;flex-direction:column;gap:12px;min-height:0}
-#goldenReplaceSearch{width:100%;border:1px solid #d8d7cf;background:white;border-radius:14px;padding:12px 14px;font-size:16px;outline:none}
-#goldenReplaceCurrent{display:flex;align-items:center;gap:12px;color:#5f6673;font-size:14px}
-#goldenReplaceCurrentChip{width:26px;height:26px;border-radius:10px;border:1px solid rgba(0,0,0,.12);flex:0 0 auto}
-#goldenReplaceActions{display:flex;gap:10px;flex-wrap:wrap}
-#goldenReplaceActions button{border:1px solid #d8d7cf;background:#f2f2ed;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
-#goldenReplaceList{overflow:auto;min-height:0;border:1px solid #ecebe4;border-radius:14px;background:white;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(17px,17px));grid-auto-rows:17px;gap:3px;align-content:start;justify-content:start}
-.goldenReplaceRow{width:17px !important;height:17px !important;min-width:17px !important;min-height:17px !important;border:0 !important;padding:0 !important;margin:0 !important;background:transparent !important;color:transparent !important;display:block;cursor:pointer;border-radius:0 !important;position:relative;appearance:none !important;-webkit-appearance:none !important;box-shadow:none !important;outline:none;transform:none !important}
-.goldenReplaceRow:hover{transform:none !important;background:transparent !important;border-color:transparent !important;box-shadow:none !important}
+#goldenReplaceDialog{width:min(980px,calc(100vw - 32px));height:auto;max-height:82vh;min-width:0;overflow:hidden;background:#fbfbf8;border:1px solid #d8d7cf;border-radius:20px;box-shadow:0 22px 60px rgba(31,41,51,.20);display:flex;flex-direction:column;pointer-events:auto}
+#goldenReplaceHead{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #e7e4dd;background:#fbfbf8;cursor:grab;flex:0 0 auto}
+#goldenReplaceTitle{font-size:21px;font-weight:700;letter-spacing:.01em;color:#30343b}
+#goldenReplaceClose{border:1px solid #d8d7cf;background:#f2f2ed;border-radius:12px;width:40px;height:40px;font-size:21px;cursor:pointer}
+#goldenReplaceBody{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+#goldenReplaceCurrent{display:flex;align-items:center;gap:11px;color:#5f6673;font-size:14px;min-height:34px}
+#goldenReplaceCurrentChip{width:32px;height:32px;border-radius:10px;border:1px solid rgba(0,0,0,.15);flex:0 0 auto;box-shadow:0 0 0 3px #fff}
+#goldenReplaceCurrentText{line-height:1.35;white-space:pre-line}
+.goldenReplaceSearchRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.goldenReplaceSearchWrap{position:relative;min-width:0}
+#goldenReplaceSearch{width:100%;height:48px;border:1px solid #d8d7cf;background:white;border-radius:13px;padding:0 48px 0 15px;font-size:15px;outline:none}
+#goldenReplaceSearch:focus{border-color:#6c7785;box-shadow:0 0 0 3px rgba(67,86,108,.12)}
+#goldenReplaceClear{position:absolute;right:7px;top:7px;width:34px;height:34px;padding:0;border:0;background:transparent;border-radius:9px;color:#6f7682;font-size:18px;cursor:pointer;display:none}
+#goldenReplaceClear.visible{display:block}
+#goldenReplaceFamily{height:48px;min-width:170px;border:1px solid #d8d7cf;background:#fff;border-radius:13px;padding:0 34px 0 12px;font-size:14px}
+.goldenReplaceTools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.goldenReplaceTabs{display:flex;gap:5px;padding:4px;background:#efefeb;border-radius:12px}
+.goldenReplaceTabs button{min-height:34px;border:0;border-radius:9px;padding:0 13px;background:transparent;color:#5f6673;font-weight:600;cursor:pointer}
+.goldenReplaceTabs button.active{background:#fff;color:#26313d;box-shadow:0 1px 4px rgba(31,41,51,.10)}
+#goldenReplaceCount{font-size:13px;color:#747b85;font-variant-numeric:tabular-nums}
+#goldenReplaceSectionLabel{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#697281}
+#goldenReplaceList{overflow:auto;min-height:57px;max-height:430px;border:1px solid #e6e3dc;border-radius:14px;background:white;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(27px,27px));grid-auto-rows:27px;gap:7px;align-content:start;justify-content:start;scrollbar-gutter:stable}
+.goldenReplaceRow{width:27px !important;height:27px !important;min-width:27px !important;min-height:27px !important;border:0 !important;padding:0 !important;margin:0 !important;background:transparent !important;color:transparent !important;display:block;cursor:pointer;border-radius:7px !important;position:relative;appearance:none !important;-webkit-appearance:none !important;box-shadow:none !important;outline:none;transform:none !important}
+.goldenReplaceRow:hover{transform:translateY(-1px) !important;background:transparent !important;border-color:transparent !important;box-shadow:0 3px 8px rgba(31,41,51,.16) !important}
 .goldenReplaceRow:active{transform:none !important}
 .goldenReplaceRow:focus-visible{outline:2px solid #1b73e8;outline-offset:1px}
-.goldenReplaceRow.isCurrent{box-shadow:0 0 0 2px #20242a !important}
-.goldenReplaceChip{width:17px;height:17px;border-radius:0;border:1px solid rgba(0,0,0,.10);display:block;background-clip:padding-box}
+.goldenReplaceRow.isCurrent{box-shadow:0 0 0 2px #20242a,0 0 0 4px #fff !important}
+.goldenReplaceChip{width:27px;height:27px;border-radius:7px;border:1px solid rgba(0,0,0,.11);display:block;background-clip:padding-box}
 .goldenReplaceMeta{display:none}
 .goldenReplaceName{display:none}
 .goldenReplaceInfo{font-size:12px;color:#6f7682}
+#goldenReplaceActions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:2px}
+#goldenReplaceActions button{border:1px solid #d8d7cf;background:#f2f2ed;border-radius:11px;min-height:38px;padding:0 13px;font-weight:600;cursor:pointer}
+@media(max-width:680px){#goldenReplaceDialog{height:min(760px,94vh);min-height:0}.goldenReplaceSearchRow{grid-template-columns:1fr}#goldenReplaceFamily{width:100%}#goldenReplaceList{grid-template-columns:repeat(auto-fill,minmax(30px,30px));grid-auto-rows:30px}.goldenReplaceRow,.goldenReplaceChip{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important}}
 
 </style>
 
@@ -3316,6 +3330,8 @@ let automaticMixSlotHexes=[];
 let mixPreviewHexes=[];
 let activeGoldenEditIndex=-1;
 let activePaletteEditKind="golden";
+let activeReplaceView="recommended";
+const recentReplaceColors={golden:[],mix:[]};
 let shuffleHistory=[], shuffleHistoryIndex=-1; // MIXES history
 let goldenShuffleHistory=[], goldenShuffleHistoryIndex=-1;
 let activeRecolorTarget="golden";
@@ -4353,11 +4369,14 @@ function refreshOpenColorDialog(index, kind){
   $("goldenReplaceTitle").textContent=`Replace ${label} color`;
   $("goldenReplaceCurrentChip").style.background=currentHex || "transparent";
   $("goldenReplaceCurrentText").textContent=info
-    ? `Slot ${index+1} · Current: ${info.name} · RGB ${info.rgb.join(", ")}`
-    : `Slot ${index+1} · Choose a ${label} replacement color.`;
+    ? `Color ${index+1} · ${info.name}\nRGB ${info.rgb.join(", ")}`
+    : `Color ${index+1} · Choose a ${label} replacement color.`;
   $("goldenReplaceSearch").placeholder=`Search ${label} color name, code, or RGB`;
 
   $("goldenReplaceSearch").value="";
+  $("goldenReplaceClear")?.classList.remove("visible");
+  if($("goldenReplaceFamily")) $("goldenReplaceFamily").value="all";
+  setReplaceView("recommended",{render:false});
   renderGoldenReplaceList("");
 
   const overlay=$("goldenReplaceOverlay");
@@ -4462,6 +4481,55 @@ function goldenReplaceSortKey(c){
   return {h,s,l};
 }
 
+function setReplaceView(view,{render=true}={}){
+  activeReplaceView=["recommended","all","recent"].includes(view) ? view : "recommended";
+  document.querySelectorAll("[data-replace-view]").forEach(button=>{
+    const active=button.dataset.replaceView===activeReplaceView;
+    button.classList.toggle("active",active);
+    button.setAttribute("aria-selected",active ? "true" : "false");
+  });
+  if(render) renderGoldenReplaceList($("goldenReplaceSearch")?.value||"");
+}
+
+function clearGoldenReplaceSearch(){
+  const search=$("goldenReplaceSearch");
+  if(!search) return;
+  search.value="";
+  $("goldenReplaceClear")?.classList.remove("visible");
+  renderGoldenReplaceList("");
+  search.focus();
+}
+
+function navigateReplaceGrid(e){
+  if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) return;
+  const host=$("goldenReplaceList");
+  const buttons=[...(host?.querySelectorAll(".goldenReplaceRow")||[])];
+  const index=buttons.indexOf(document.activeElement);
+  if(index<0 || !buttons.length) return;
+  const columns=Math.max(1,Math.round(host.clientWidth/34));
+  const delta=e.key==="ArrowLeft" ? -1 : e.key==="ArrowRight" ? 1 : e.key==="ArrowUp" ? -columns : columns;
+  const next=Math.max(0,Math.min(buttons.length-1,index+delta));
+  if(next!==index){e.preventDefault();buttons[next].focus();}
+}
+
+function rememberReplaceColor(kind,hex){
+  const list=recentReplaceColors[kind] || recentReplaceColors.golden;
+  const normalized=String(hex||"").toUpperCase();
+  if(!normalized) return;
+  const existing=list.indexOf(normalized);
+  if(existing>=0) list.splice(existing,1);
+  list.unshift(normalized);
+  list.splice(12);
+}
+
+function replaceRecommendationRows(rows,currentHex){
+  if(!currentHex) return rows.slice(0,18);
+  const target=rgb(currentHex);
+  return [...rows]
+    .sort((a,b)=>deltaE76(target,a.rgb)-deltaE76(target,b.rgb))
+    .slice(0,18);
+}
+
 function centerCurrentColorInReplaceList(){
   const host=$("goldenReplaceList");
   if(!host) return;
@@ -4490,20 +4558,38 @@ function renderGoldenReplaceList(query){
   const q=String(query||"").trim().toLowerCase();
 
   const editableRows=getEditablePaletteRows(activePaletteEditKind);
+  const family=$("goldenReplaceFamily")?.value || "all";
+  const currentHex = activeGoldenEditIndex>=0 ? (getEditableCurrentHexes(activePaletteEditKind)[activeGoldenEditIndex]||"") : "";
 
   let rows=editableRows.filter(c=>{
+    if(family!=="all" && goldenReplaceColorGroup(c)!==family) return false;
     if(!q) return true;
     const name=(c.name||"").toLowerCase();
     const rgbText=(c.rgb||[]).join(", ").toLowerCase();
     return name.includes(q) || rgbText.includes(q);
   });
 
+  if(activeReplaceView==="recommended"){
+    rows=replaceRecommendationRows(rows,currentHex);
+  }else if(activeReplaceView==="recent"){
+    const recent=recentReplaceColors[activePaletteEditKind] || [];
+    rows=recent.map(hex=>editableRows.find(c=>String(c.hex||"").toUpperCase()===hex)).filter(Boolean).filter(c=>{
+      if(family!=="all" && goldenReplaceColorGroup(c)!==family) return false;
+      if(!q) return true;
+      return String(c.name||"").toLowerCase().includes(q) || (c.rgb||[]).join(", ").includes(q);
+    });
+  }
+
+  const viewLabel=activeReplaceView==="recommended" ? "Recommended matches" : activeReplaceView==="recent" ? "Recently used" : "All colors";
+  if($("goldenReplaceSectionLabel")) $("goldenReplaceSectionLabel").textContent=viewLabel;
+  if($("goldenReplaceCount")) $("goldenReplaceCount").textContent=`${rows.length} ${rows.length===1 ? "color" : "colors"}`;
+
   if(!rows.length){
     const empty=document.createElement("div");
     empty.className="goldenReplaceInfo";
     empty.style.padding="14px";
     empty.style.gridColumn="1 / -1";
-    empty.textContent="No GOLDEN colors found for this search.";
+    empty.textContent=activeReplaceView==="recent" ? "No recently used colors yet." : "No colors found for this search.";
     host.appendChild(empty);
     return;
   }
@@ -4525,23 +4611,23 @@ function renderGoldenReplaceList(query){
   ];
   const groupIndex=new Map(groupOrder.map((g,i)=>[g,i]));
 
-  rows.sort((a,b)=>{
-    const ga=goldenReplaceColorGroup(a);
-    const gb=goldenReplaceColorGroup(b);
-    const gia=groupIndex.has(ga) ? groupIndex.get(ga) : 999;
-    const gib=groupIndex.has(gb) ? groupIndex.get(gb) : 999;
-    if(gia!==gib) return gia-gib;
+  if(activeReplaceView==="all"){
+    rows.sort((a,b)=>{
+      const ga=goldenReplaceColorGroup(a);
+      const gb=goldenReplaceColorGroup(b);
+      const gia=groupIndex.has(ga) ? groupIndex.get(ga) : 999;
+      const gib=groupIndex.has(gb) ? groupIndex.get(gb) : 999;
+      if(gia!==gib) return gia-gib;
 
-    const A=goldenReplaceSortKey(a);
-    const B=goldenReplaceSortKey(b);
+      const A=goldenReplaceSortKey(a);
+      const B=goldenReplaceSortKey(b);
 
-    if(Math.abs(A.l-B.l)>0.001) return A.l-B.l; // dark -> light
-    if(Math.abs(A.h-B.h)>0.001) return A.h-B.h;
-    if(Math.abs(A.s-B.s)>0.001) return B.s-A.s;
-    return String(a.name||"").localeCompare(String(b.name||""));
-  });
-
-  const currentHex = activeGoldenEditIndex>=0 ? (getEditableCurrentHexes(activePaletteEditKind)[activeGoldenEditIndex]||"") : "";
+      if(Math.abs(A.l-B.l)>0.001) return A.l-B.l; // dark -> light
+      if(Math.abs(A.h-B.h)>0.001) return A.h-B.h;
+      if(Math.abs(A.s-B.s)>0.001) return B.s-A.s;
+      return String(a.name||"").localeCompare(String(b.name||""));
+    });
+  }
 
   // Select exactly one item only when its RGB is an exact match.
   // No nearest-color fallback.
@@ -4570,14 +4656,15 @@ function renderGoldenReplaceList(query){
       const idx=activeGoldenEditIndex;
       if(activePaletteEditKind==="mix") applyMixReplacementByIndex(idx, c.hex);
       else applyGoldenReplacementByIndex(idx, c.hex);
+      rememberReplaceColor(activePaletteEditKind,c.hex);
       renderGoldenReplaceList($("goldenReplaceSearch")?.value||"");
 
       const currentHex=getEditableCurrentHexes(activePaletteEditKind)[idx] || c.hex;
       const currentInfo=exactEditableColorInfoForRgb(currentHex, activePaletteEditKind);
       $("goldenReplaceCurrentChip").style.background=currentHex || "transparent";
       $("goldenReplaceCurrentText").textContent=currentInfo
-        ? `Slot ${idx+1} · Current: ${currentInfo.name} · RGB ${currentInfo.rgb.join(", ")}`
-        : `Slot ${idx+1} · RGB ${rgb(currentHex).join(", ")}`;
+        ? `Color ${idx+1} · ${currentInfo.name}\nRGB ${currentInfo.rgb.join(", ")}`
+        : `Color ${idx+1} · RGB ${rgb(currentHex).join(", ")}`;
     };
 
     const chip=document.createElement("div");
@@ -9622,8 +9709,8 @@ document.addEventListener("pointerdown",e=>{
   // Clicking another GOLDEN/MIXES swatch switches the already-open dialog instead of closing it.
   if(target.closest("#goldenPaletteSwatches .comparePaletteItem, #mixPaletteSwatches .comparePaletteItem")) return;
 
-  // Any other background click closes the color dialog.
-  closeGoldenReplaceDialog();
+  // Keep the dialog open. The explicit X is the only close action.
+  e.preventDefault();
 });
 $("goldenReplaceReset")?.addEventListener("click",()=>{
   if(activeGoldenEditIndex<0) return;
@@ -9637,8 +9724,8 @@ $("goldenReplaceReset")?.addEventListener("click",()=>{
   const label=getEditablePaletteLabel(activePaletteEditKind);
   $("goldenReplaceCurrentChip").style.background=currentHex || "transparent";
   $("goldenReplaceCurrentText").textContent=currentInfo
-    ? `Slot ${idx+1} · Current: ${currentInfo.name} · RGB ${currentInfo.rgb.join(", ")}`
-    : `Slot ${idx+1} · Choose a ${label} replacement color.`;
+    ? `Color ${idx+1} · ${currentInfo.name}\nRGB ${currentInfo.rgb.join(", ")}`
+    : `Color ${idx+1} · Choose a ${label} replacement color.`;
 });
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape" && $("goldenReplaceOverlay")?.classList.contains("open")){
@@ -9940,7 +10027,29 @@ loadExternalPaletteLibrary();
         <div id="goldenReplaceCurrentChip"></div>
         <div id="goldenReplaceCurrentText">Choose a replacement color from the GOLDEN list.</div>
       </div>
-      <input id="goldenReplaceSearch" type="text" placeholder="Search color name, code, or RGB" oninput="renderGoldenReplaceList(this.value)">
+      <div class="goldenReplaceSearchRow">
+        <div class="goldenReplaceSearchWrap">
+          <input id="goldenReplaceSearch" type="text" placeholder="Search color name, code, or RGB" autocomplete="off" oninput="$('goldenReplaceClear')?.classList.toggle('visible',Boolean(this.value));renderGoldenReplaceList(this.value)">
+          <button id="goldenReplaceClear" type="button" aria-label="Clear search" onclick="clearGoldenReplaceSearch()">×</button>
+        </div>
+        <select id="goldenReplaceFamily" aria-label="Filter by color family" onchange="renderGoldenReplaceList($('goldenReplaceSearch')?.value||'')">
+          <option value="all">All color families</option>
+          <option>Pink / Magenta</option><option>Red</option><option>Orange</option><option>Yellow</option>
+          <option>Green</option><option>Teal / Turquoise</option><option>Blue</option><option>Purple / Violet</option>
+          <option>Brown / Earth</option><option>Gray / Neutral</option><option>Light / Pastel</option>
+          <option>White / Off White</option><option>Black</option>
+        </select>
+      </div>
+      <div class="goldenReplaceTools">
+        <div class="goldenReplaceTabs" role="tablist" aria-label="Color collections">
+          <button type="button" class="active" data-replace-view="recommended" role="tab" aria-selected="true" onclick="setReplaceView('recommended')">Recommended</button>
+          <button type="button" data-replace-view="all" role="tab" aria-selected="false" onclick="setReplaceView('all')">All colors</button>
+          <button type="button" data-replace-view="recent" role="tab" aria-selected="false" onclick="setReplaceView('recent')">Recent</button>
+        </div>
+        <div id="goldenReplaceCount" aria-live="polite">0 colors</div>
+      </div>
+      <div id="goldenReplaceSectionLabel">Recommended matches</div>
+      <div id="goldenReplaceList" onkeydown="navigateReplaceGrid(event)"></div>
       <div id="goldenReplaceActions">
         <button id="goldenReplaceReset" type="button" onclick="
   if(activeGoldenEditIndex>=0){
@@ -9951,12 +10060,11 @@ loadExternalPaletteLibrary();
     const currentInfo=currentHex ? exactEditableColorInfoForRgb(currentHex, activePaletteEditKind) : null;
     $('goldenReplaceCurrentChip').style.background=currentHex || 'transparent';
     $('goldenReplaceCurrentText').textContent=currentInfo
-      ? `Slot ${idx+1} · Current: ${currentInfo.name} · RGB ${currentInfo.rgb.join(', ')}`
-      : `Slot ${idx+1} · Choose a GOLDEN replacement color.`;
+      ? `Color ${idx+1} · ${currentInfo.name}\nRGB ${currentInfo.rgb.join(', ')}`
+      : `Color ${idx+1} · Choose a GOLDEN replacement color.`;
   }
-">Reset this slot to automatic</button>
+">Use automatic match</button>
       </div>
-      <div id="goldenReplaceList"></div>
     </div>
   </div>
 </div>
