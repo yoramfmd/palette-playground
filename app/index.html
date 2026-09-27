@@ -2732,6 +2732,14 @@ button{
   font-size:11px;
   font-variant-numeric:tabular-nums;
 }
+.contrastAdvisor{margin-top:10px;padding:11px 12px;border:1px solid #ddd9d2;border-radius:13px;background:#fbfaf7;display:grid;gap:8px}
+.contrastAdvisor.is-clear{background:#f4f7f2;border-color:#d5dfd0}
+.contrastAdvisorTitle{font-size:12px;font-weight:800;color:#303b47}
+.contrastAdvisorText{font-size:11px;line-height:1.45;color:#697281}
+.contrastAdvisorActions{display:flex;gap:7px;flex-wrap:wrap}
+.contrastAdvisorActions button{min-height:34px;padding:0 11px;font-size:11px}
+.paletteSearch{width:100%;height:42px;margin-top:12px;border:1px solid var(--line-strong);border-radius:12px;background:#fff;padding:0 13px;color:var(--ink);font:inherit}
+.paletteSearch:focus{outline:2px solid rgba(35,50,68,.2);outline-offset:1px;border-color:#788696}
 .recolorResetRow{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -3023,6 +3031,7 @@ button{
       <option value="All">All categories</option>
     </select>
     <label style="margin-top:12px">Palette list</label>
+    <input id="paletteSearch" class="paletteSearch" type="search" placeholder="Search name, category, or HEX" autocomplete="off" aria-label="Search palettes">
     <select id="paletteSelect"></select>
   </div>
   <div class="paletteManageActions">
@@ -3066,6 +3075,15 @@ button{
   <button id="recolorForward" class="secondary recolorArrow" type="button" aria-label="Next mapping" title="Next mapping" disabled>→</button>
 </div>
 <div id="recolorHistoryStatus" class="recolorHistoryStatus" role="status" aria-live="polite">Mapping 1 of 1 · GOLDEN</div>
+<div id="contrastAdvisor" class="contrastAdvisor is-clear" aria-live="polite">
+  <div id="contrastAdvisorTitle" class="contrastAdvisorTitle">Contrast check ready</div>
+  <div id="contrastAdvisorText" class="contrastAdvisorText">No nearby color conflict detected.</div>
+  <div id="contrastAdvisorActions" class="contrastAdvisorActions" hidden>
+    <button id="contrastShow" class="secondary" type="button">Show area</button>
+    <button id="contrastFix" type="button">Fix this pair</button>
+    <button id="contrastIgnore" class="secondary" type="button">Ignore</button>
+  </div>
+</div>
 <div class="recolorResetRow">
   <button id="resetActiveMapping" class="secondary" type="button">Reset mapping</button>
   <button id="imageOriginal" class="secondary" title="Reload colors from the image currently marked with the black outline" disabled>Reset image colors</button>
@@ -3405,7 +3423,19 @@ const ADOBE_OFFICIAL_PRESETS = [
   ['Adobe SS 2023 · Sorbet in Spring','Adobe Explore',['#FBBDC2','#F8B67C','#50ACED','#FBEC6B','#EF6893']],
   ['Adobe SS 2023 · Keep Growing','Adobe Explore',['#497AA6','#465902','#7C8C03','#D3D92B','#A9E3CD']],
   ['Adobe SS 2023 · Beach Towel','Adobe Explore',['#F21651','#D92B7C','#FD8709','#639A9F','#CF2B2C']],
-  ['Adobe SS 2023 · Fluorescent Fantasy','Adobe Explore',['#F93AFB','#FF198C','#CBF23D','#4DE8FE','#FEE858']]
+  ['Adobe SS 2023 · Fluorescent Fantasy','Adobe Explore',['#F93AFB','#FF198C','#CBF23D','#4DE8FE','#FEE858']],
+
+  // Curated from the current Adobe Color Explore popular feed (September 2026).
+  // Kept in a separate source group so they are clearly community Explore themes,
+  // not renamed official Adobe Stock seasonal collections.
+  ['Adobe Explore Current · Crimson Neutral','Adobe Explore · Current',['#73030D','#732F3B','#F2F2F2','#8C8C8C','#0D0D0D']],
+  ['Adobe Explore Current · Warm Earth','Adobe Explore · Current',['#D99F59','#D99962','#A67153','#733F2D','#F2F2F2']],
+  ['Adobe Explore Current · Electric Triad','Adobe Explore · Current',['#FA0080','#00DDFA','#FADD00','#A59837','#7A3D5D','#3D737A']],
+  ['Adobe Explore Current · Editorial Blush','Adobe Explore · Current',['#A60321','#F2E9D8','#8C5C32','#D9A577','#D97B66']],
+  ['Adobe Explore Current · Olive Café','Adobe Explore · Current',['#555934','#F2E6D8','#BF9B7A','#8C5B3E','#593E2E']],
+  ['Adobe Explore Current · Dark Rose','Adobe Explore · Current',['#A27A86','#77686D','#CB7790','#4D363D','#331C23','#33131D']],
+  ['Adobe Explore Current · Electric Warm','Adobe Explore · Current',['#F94EFA','#FA4E3F','#F9547F','#BA4AFA','#FA5019']],
+  ['Adobe Explore Current · Home Blue','Adobe Explore · Current',['#003E8F','#4F3B15','#8F5E01','#14243A','#FFD482','#ADD0FF']]
 ];
 
 function dedupeArtistFamilies(list){
@@ -3461,6 +3491,8 @@ let workspaceUndoStack=[],workspaceRedoStack=[];
 let workspaceHistoryReady=false;
 let workspaceHistoryRestoring=false;
 let activeRecolorTarget="golden";
+let currentContrastIssue=null;
+const ignoredContrastIssues=new Set();
 let imageOriginalMap=null;
 let highlightedSource=null;
 const highlightBackup=new WeakMap();
@@ -5630,14 +5662,21 @@ function buildPaletteSelect(){
   const select=$("paletteSelect");
   const filter=$("categoryFilter");
   const selectedCategory = filter ? (filter.value||"All") : "All";
+  const searchQuery=String($("paletteSearch")?.value||"").trim().toLowerCase();
   const favoriteIds=loadFavoritePaletteIds();
-  const recommendedIndexes=selectedCategory===RECOMMENDED_PALETTES_FILTER ? recommendedPaletteIndexSet() : null;
+  const recommendedIndexes=!searchQuery && selectedCategory===RECOMMENDED_PALETTES_FILTER ? recommendedPaletteIndexSet() : null;
   const previousValue=select.value;
   select.innerHTML="";
   const byCat={};
   ALL_PALETTES.forEach(([name,category,colors],idx)=>{
     const item=ALL_PALETTES[idx];
-    if(selectedCategory===FAVORITE_PALETTES_FILTER){
+    if(searchQuery){
+      const searchable=`${name} ${category} ${(colors||[]).join(" ")}`.toLowerCase();
+      if(!searchable.includes(searchQuery)) return;
+    }
+    if(searchQuery){
+      // Search is global so users do not have to guess which category contains a palette.
+    }else if(selectedCategory===FAVORITE_PALETTES_FILTER){
       if(!favoriteIds.has(paletteId(item))) return;
     }else if(selectedCategory===RECOMMENDED_PALETTES_FILTER){
       if(!recommendedIndexes.has(idx)) return;
@@ -5658,6 +5697,13 @@ function buildPaletteSelect(){
     });
     select.appendChild(group);
   });
+  if(!select.options.length){
+    const empty=document.createElement("option");
+    empty.value="";
+    empty.textContent="No matching palettes";
+    empty.disabled=true;
+    select.appendChild(empty);
+  }
   const restored = select.querySelector('option[value="'+previousValue+'"]');
   if(restored) select.value=previousValue;
   else if(select.options.length) select.selectedIndex=0;
@@ -6591,6 +6637,7 @@ function setRecolorTarget(kind){
   }
   setActivePaletteGroup(activeRecolorTarget);
   updateRecolorControls();
+  requestAnimationFrame(refreshContrastAdvisor);
 }
 
 function resetActiveRecolorMapping(){
@@ -6645,6 +6692,7 @@ function applyMap(M, options={}){
   resetLightnessBases();
   renderMapping();
   renderCurrentMixPaletteRow();
+  if(activeRecolorTarget==="mix") requestAnimationFrame(refreshContrastAdvisor);
 }
 
 
@@ -8026,6 +8074,133 @@ function scoreHarmonicShuffleMap(map,history=[]){
   return score;
 }
 
+function contrastIssueKey(issue){
+  return issue
+    ? `${activeRecolorTarget}|${issue.a}|${issue.b}|${issue.first}|${issue.second}`
+    : "";
+}
+
+function contrastIssuesForMap(map){
+  if(!map?.size) return [];
+  return buildShuffleSpatialRelations().map(relation=>{
+    const first=map.get(relation.a)||relation.a;
+    const second=map.get(relation.b)||relation.b;
+    const {deltaE,deltaL}=shuffleLabDistance(first,second);
+    const strong=relation.type==="containment";
+    const minimumDelta=strong ? 26 : 15;
+    const minimumLightness=strong ? 9 : 0;
+    const severity=Math.max(0,minimumDelta-deltaE)*2+
+      Math.max(0,minimumLightness-deltaL)*(strong ? 1.6 : 0);
+    return {...relation,first,second,deltaE,deltaL,severity};
+  }).filter(issue=>issue.severity>0)
+    .filter(issue=>!ignoredContrastIssues.has(contrastIssueKey(issue)))
+    .sort((a,b)=>b.severity-a.severity);
+}
+
+function activeContrastMap(){
+  if(activeRecolorTarget==="golden"){
+    return cleanOnlySvg ? currentCleanOnlyMap() : cloneColorMap(cleanGoldenMap);
+  }
+  return cloneColorMap(lastMap);
+}
+
+function refreshContrastAdvisor(){
+  const panel=$("contrastAdvisor");
+  const title=$("contrastAdvisorTitle");
+  const text=$("contrastAdvisorText");
+  const actions=$("contrastAdvisorActions");
+  if(!panel || !title || !text || !actions) return;
+  const map=activeContrastMap();
+  const issues=contrastIssuesForMap(map);
+  currentContrastIssue=issues[0]||null;
+  panel.classList.toggle("is-clear",!currentContrastIssue);
+  actions.hidden=!currentContrastIssue;
+  if(!currentContrastIssue){
+    title.textContent="Contrast looks clear";
+    text.textContent="No nearby color conflict detected in the selected artwork.";
+    return;
+  }
+  const count=issues.length;
+  const kind=currentContrastIssue.type==="containment" ? "foreground and background" : "neighboring surfaces";
+  title.textContent=`${count} contrast ${count===1 ? "warning" : "warnings"}`;
+  text.textContent=`Similar colors were found between ${kind}. Nothing changes until you choose Fix this pair.`;
+}
+
+function bestContrastRepairMap(map,issue){
+  if(!map?.size || !issue) return null;
+  const baseline=shuffleLabDistance(issue.first,issue.second);
+  const baselineIssues=contrastIssuesForMap(map);
+  const baselineSeverity=baselineIssues.reduce((sum,item)=>sum+item.severity,0);
+  let bestMap=null, bestScore=-Infinity;
+  sourceColors.forEach(candidateSource=>{
+    if(candidateSource===issue.a || candidateSource===issue.b || locked.has(candidateSource)) return;
+    const candidateHex=map.get(candidateSource)||candidateSource;
+    if(!candidateHex || candidateHex===issue.first) return;
+    const candidate=cloneColorMap(map);
+    candidate.set(issue.a,candidateHex);
+    candidate.set(candidateSource,issue.first);
+    const repaired=shuffleLabDistance(candidate.get(issue.a)||issue.a,candidate.get(issue.b)||issue.b);
+    if(repaired.deltaE<=baseline.deltaE+2 && repaired.deltaL<=baseline.deltaL+2) return;
+    const candidateIssues=contrastIssuesForMap(candidate);
+    const candidateSeverity=candidateIssues.reduce((sum,item)=>sum+item.severity,0);
+    if(candidateIssues.length>baselineIssues.length || candidateSeverity>=baselineSeverity-.5) return;
+    const score=(baselineSeverity-candidateSeverity)*8+
+      (baselineIssues.length-candidateIssues.length)*35+
+      repaired.deltaE+repaired.deltaL*1.25+
+      scoreHarmonicShuffleMap(candidate,[])*.015;
+    if(score>bestScore){
+      bestScore=score;
+      bestMap=candidate;
+    }
+  });
+  return bestMap;
+}
+
+function applyContrastRepair(){
+  if(!currentContrastIssue) return;
+  const base=activeContrastMap();
+  const repaired=bestContrastRepairMap(base,currentContrastIssue);
+  if(!repaired){
+    $("status").textContent="No better position was found with the current palette. Try another mapping.";
+    return;
+  }
+  recordWorkspaceUndo("contrast repair");
+  if(activeRecolorTarget==="golden"){
+    if(goldenShuffleHistoryIndex<0){
+      goldenShuffleHistory=[cloneColorMap(base)];
+      goldenShuffleHistoryIndex=0;
+    }
+    goldenShuffleHistory=goldenShuffleHistory.slice(0,goldenShuffleHistoryIndex+1);
+    goldenShuffleHistory.push(cloneColorMap(repaired));
+    goldenShuffleHistoryIndex++;
+    renderGoldenShuffleMap(repaired);
+  }else{
+    if(shuffleHistoryIndex<0){
+      shuffleHistory=[cloneColorMap(base)];
+      shuffleHistoryIndex=0;
+    }
+    shuffleHistory=shuffleHistory.slice(0,shuffleHistoryIndex+1);
+    shuffleHistory.push(cloneColorMap(repaired));
+    shuffleHistoryIndex++;
+    applyMap(repaired,{keepShuffleHistory:true});
+  }
+  updateRecolorControls();
+  $("status").textContent=`Contrast repaired in ${activeRecolorTarget.toUpperCase()} by exchanging existing color positions.`;
+  refreshContrastAdvisor();
+}
+
+function showCurrentContrastIssue(){
+  if(!currentContrastIssue) return;
+  selectMappingFromArtwork(currentContrastIssue.a);
+}
+
+function ignoreCurrentContrastIssue(){
+  if(!currentContrastIssue) return;
+  ignoredContrastIssues.add(contrastIssueKey(currentContrastIssue));
+  refreshContrastAdvisor();
+  $("status").textContent="Contrast warning ignored for this mapping.";
+}
+
 function shuffleMapFromCurrentMap(currentMap,history=[]){
   const sources=[...sourceColors];
   if(!sources.length) return new Map();
@@ -8059,6 +8234,7 @@ function renderGoldenShuffleMap(M){
   if(!M) return;
   clearArtworkHighlight();
   renderMappedArtworkToHost("hostCleanOnly",M);
+  requestAnimationFrame(refreshContrastAdvisor);
 }
 
 function goldenShuffleOnce(){
@@ -10045,6 +10221,10 @@ $("loadPalette").onclick=()=>{
 $("clearPalette").onclick=()=>{ palette=[]; renderPalette(); };
 $("applySelected").onclick=useSelectedPalette;
 $("paletteSelect").onchange=useSelectedPalette;
+$("paletteSearch").addEventListener("input",()=>{
+  buildPaletteSelect();
+  if($("paletteSelect").value!=="") useSelectedPalette();
+});
 $("randomPalette").onclick=randomPalette;
 $("randomPaletteBack").onclick=()=>goRandomPaletteHistory(-1);
 $("randomPaletteForward").onclick=()=>goRandomPaletteHistory(1);
@@ -10180,6 +10360,9 @@ $("recolorForward").onclick=()=>{
   else moveShuffleHistory(1);
 };
 $("resetActiveMapping").onclick=resetActiveRecolorMapping;
+$("contrastShow").onclick=showCurrentContrastIssue;
+$("contrastFix").onclick=applyContrastRepair;
+$("contrastIgnore").onclick=ignoreCurrentContrastIssue;
 
 $("imageOriginal").onclick=returnToImageOriginal;
 updateShuffleHistoryButtons();

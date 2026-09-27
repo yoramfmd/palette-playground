@@ -280,6 +280,19 @@ test('shuffle ranks spatially harmonious and novel permutations only', () => {
   assert.match(appSource, /shuffleMapFromCurrentMap\(lastMap,shuffleHistory\)/);
 });
 
+test('contrast guidance stays user-controlled and palette discovery is searchable', () => {
+  assert.match(appSource, /id="contrastAdvisor"/);
+  assert.match(appSource, /id="contrastFix"[^>]*>Fix this pair<\/button>/);
+  assert.match(appSource, /function contrastIssuesForMap\(map\)/);
+  assert.match(appSource, /function bestContrastRepairMap\(map,issue\)/);
+  assert.match(appSource, /Nothing changes until you choose Fix this pair/);
+  assert.match(appSource, /exchanging existing color positions/);
+  assert.match(appSource, /id="paletteSearch"/);
+  assert.match(appSource, /Search name, category, or HEX/);
+  assert.match(appSource, /Adobe Explore Current · Crimson Neutral/);
+  assert.match(appSource, /Adobe Explore Current · Home Blue/);
+});
+
 test('duplicate scanner offers a near-exact default without automatic deletion', () => {
   assert.match(appSource, /<option value="veryStrict" selected>Very strict · near-exact<\/option>/);
   assert.match(appSource, /metrics\.meanDiff<=2\.2/);
