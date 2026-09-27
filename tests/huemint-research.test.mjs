@@ -145,6 +145,15 @@ test('palette count changes preserve the active Huemint source colors', () => {
   assert.match(appSource, /Current palette resized to \$\{imagePaletteCount\} colors/);
 });
 
+test('generator progress follows unique history and the active collection total', () => {
+  assert.match(generatorSource, /function progressLabel\(\)/);
+  assert.match(generatorSource, /`\$\{historyIndex \+ 1\} of \$\{activeCorpus\.length\} palettes`/);
+  assert.match(generatorSource, /history\.slice\(0, historyIndex \+ 1\)/);
+  assert.match(generatorSource, /new Set\(history\.map\(record => record\.id\)\)\.size >= activeCorpus\.length/);
+  assert.match(generatorSource, /resetHistory\(null\)/);
+  assert.match(generatorSource, /showProgress: false/);
+});
+
 test('app typography follows Huemint Roboto styling including controls', () => {
   assert.match(appSource, /id="huemintTypographyStyles"/);
   assert.match(appSource, /--huemint-font:Roboto/);

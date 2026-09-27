@@ -19,7 +19,6 @@
   const note = document.getElementById('huemintLocalNote');
   let activeCorpus = [];
   let currentRecord = null;
-  let recentIds = [];
   let history = [];
   let historyIndex = -1;
 
@@ -107,7 +106,8 @@
   }
 
   function chooseNextRecord() {
-    const unseen = activeCorpus.filter(record => !recentIds.includes(record.id));
+    const visitedIds = new Set(history.slice(0, historyIndex + 1).map(record => record.id));
+    const unseen = activeCorpus.filter(record => !visitedIds.has(record.id));
     const candidates = unseen.length ? unseen : activeCorpus.filter(record => record.id !== currentRecord?.id);
     const pool = candidates.length ? candidates : activeCorpus;
     const mode = modeSelect.value;
@@ -116,10 +116,6 @@
       const rightScore = qualityScore(right, mode) + paletteDistance(right, currentRecord) * 0.38;
       return rightScore - leftScore || left.id.localeCompare(right.id);
     })[0] || null;
-  }
-
-  function rememberRecord(record) {
-    recentIds = [...recentIds.filter(id => id !== record.id), record.id].slice(-4);
   }
 
   function updateHistoryButtons() {
@@ -139,6 +135,11 @@
     history.push(record);
     historyIndex = history.length - 1;
     updateHistoryButtons();
+  }
+
+  function progressLabel() {
+    if (historyIndex < 0 || !activeCorpus.length) return '';
+    return `${historyIndex + 1} of ${activeCorpus.length} palettes`;
   }
 
   function readFavorites() {
@@ -180,10 +181,11 @@
     if (typeof window.applyListPaletteToAllThreeWindows === 'function') {
       window.applyListPaletteToAllThreeWindows(record.colors, { direct: true });
     }
-    rememberRecord(record);
     if (options.trackHistory !== false) addToHistory(record);
     const source = `${categoryForTemplate(record.template)} · ${templateLabel(record.template)}`;
-    status.textContent = message || `Applied ${modeLabels[modeSelect.value]} selection · ${source}`;
+    status.textContent = options.showProgress === false
+      ? (message || `Applied ${modeLabels[modeSelect.value]} selection · ${source}`)
+      : `${progressLabel()} · ${modeLabels[modeSelect.value]} · ${source}`;
     note.textContent = `${record.colors.length} original Huemint colors · ${source} · no gradients or interpolation.`;
   }
 
@@ -205,7 +207,10 @@
       button.className = 'huemintLocalFavorite';
       button.title = 'Apply saved Huemint palette';
       button.appendChild(makeStrip(record.colors, 'huemintLocalStrip compact'));
-      button.addEventListener('click', () => applyRecord(record, 'Applied saved Huemint favorite'));
+      button.addEventListener('click', () => applyRecord(record, 'Applied saved Huemint favorite', {
+        trackHistory: false,
+        showProgress: false
+      }));
       const deleteButton = document.createElement('button');
       deleteButton.type = 'button';
       deleteButton.className = 'huemintLocalDelete';
@@ -253,9 +258,8 @@
 
   function selectTemplate() {
     activeCorpus = corpus.filter(record => record.template === templateSelect.value);
-    recentIds = [];
     currentRecord = activeCorpus[0] || null;
-    resetHistory(currentRecord);
+    resetHistory(null);
     if (!currentRecord) {
       strip.replaceChildren();
       status.textContent = `No captured palettes for ${templateLabel(templateSelect.value)}.`;
@@ -281,11 +285,14 @@
   });
   templateSelect.addEventListener('change', selectTemplate);
   modeSelect.addEventListener('change', () => {
-    recentIds = currentRecord ? [currentRecord.id] : [];
+    resetHistory(null);
     status.textContent = `${modeLabels[modeSelect.value]} ranking ready · ${activeCorpus.length} real palettes in this template`;
   });
 
   generateButton.addEventListener('click', () => {
+    if (activeCorpus.length && new Set(history.map(record => record.id)).size >= activeCorpus.length) {
+      resetHistory(null);
+    }
     applyRecord(chooseNextRecord());
   });
 
