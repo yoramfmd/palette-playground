@@ -5112,12 +5112,30 @@ function hardCommitAllThreePaletteViews(){
   resetLightnessBases();
 }
 
+function resizeDirectPaletteColors(colors,targetCount){
+  const list=(colors||[]).map(color=>String(color).toUpperCase()).filter(Boolean);
+  if(!list.length) return [];
+  if(list.length===targetCount) return list.slice();
+  if(list.length>targetCount){
+    return Array.from({length:targetCount},(_,index)=>{
+      const sourceIndex=Math.round(index*(list.length-1)/Math.max(1,targetCount-1));
+      return list[sourceIndex];
+    });
+  }
+  return Array.from({length:targetCount},(_,index)=>list[index%list.length]);
+}
+
 function applyListPaletteToAllThreeWindows(colors,options={}){
   const slotCount=getPaletteSlotCount();
   const directColors=(colors||[]).map(color=>String(color).toUpperCase()).filter(Boolean);
   const nextOriginalHexes=options.direct && directColors.length
-    ? Array.from({length:slotCount},(_,index)=>directColors[index%directColors.length])
+    ? resizeDirectPaletteColors(directColors,slotCount)
     : expandPaletteToCount(colors,slotCount);
+
+  if(options.preserveSource!==true){
+    activeListPaletteSourceColors=[...directColors];
+    activeListPaletteDirect=Boolean(options.direct);
+  }
 
   // Reset synchronized state ONCE.
   imagePaletteHexes=[...nextOriginalHexes];
@@ -5360,6 +5378,8 @@ let imagePaletteSamples=[];
 let imagePaletteCount=10;
 let imagePaletteFileName="";
 let paletteSourceMode="startup";
+let activeListPaletteSourceColors=[];
+let activeListPaletteDirect=false;
 
 // ORIGINAL/SOURCE starts and restores at a fixed 10 colors.
 // Image and list/random palette modes keep their adjustable count behavior.
@@ -5702,7 +5722,17 @@ async function changeImagePaletteCount(delta){
     applyImagePalette();
     return;
   }
-  if(paletteSourceMode==="list") useSelectedPalette();
+  if(paletteSourceMode==="list"){
+    if(activeListPaletteSourceColors.length){
+      applyListPaletteToAllThreeWindows(activeListPaletteSourceColors,{
+        direct:activeListPaletteDirect,
+        preserveSource:true
+      });
+      $("status").textContent=`Current palette resized to ${imagePaletteCount} colors.`;
+      return;
+    }
+    useSelectedPalette();
+  }
 }
 
 function buildMap(mode){

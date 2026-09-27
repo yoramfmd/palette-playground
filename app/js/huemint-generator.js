@@ -38,20 +38,6 @@
     return catalog.find(item => item.slug === template)?.category || 'Huemint';
   }
 
-  function directPaletteForSlots(colors) {
-    const target = typeof window.getPaletteSlotCount === 'function'
-      ? window.getPaletteSlotCount()
-      : 10;
-    if (colors.length === target) return colors.slice();
-    if (colors.length > target) {
-      return Array.from({ length: target }, (_, index) => {
-        const sourceIndex = Math.round(index * (colors.length - 1) / Math.max(1, target - 1));
-        return colors[sourceIndex];
-      });
-    }
-    return Array.from({ length: target }, (_, index) => colors[index % colors.length]);
-  }
-
   function hexToHsl(hex) {
     const value = String(hex).replace('#', '');
     const r = parseInt(value.slice(0, 2), 16) / 255;
@@ -192,7 +178,7 @@
     currentRecord = record;
     strip.replaceChildren(makeStrip(record.colors));
     if (typeof window.applyListPaletteToAllThreeWindows === 'function') {
-      window.applyListPaletteToAllThreeWindows(directPaletteForSlots(record.colors), { direct: true });
+      window.applyListPaletteToAllThreeWindows(record.colors, { direct: true });
     }
     rememberRecord(record);
     if (options.trackHistory !== false) addToHistory(record);

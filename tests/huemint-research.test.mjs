@@ -121,7 +121,7 @@ test('research preview uses only the captured local corpus', () => {
   assert.doesNotMatch(generatorSource, /fetch\s*\(/);
   assert.doesNotMatch(generatorSource, /Math\.random/);
   assert.doesNotMatch(generatorSource, /mixHex/);
-  assert.match(generatorSource, /directPaletteForSlots/);
+  assert.match(generatorSource, /applyListPaletteToAllThreeWindows\(record\.colors, \{ direct: true \}\)/);
   assert.match(generatorSource, /\{ direct: true \}/);
   assert.match(appSource, /options\.direct && directColors\.length/);
   assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
@@ -134,6 +134,15 @@ test('research preview uses only the captured local corpus', () => {
   assert.match(generatorSource, /function removeFavorite/);
   assert.match(appSource, /max-height:184px;overflow-y:auto/);
   assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);
+});
+
+test('palette count changes preserve the active Huemint source colors', () => {
+  assert.match(appSource, /function resizeDirectPaletteColors\(colors,targetCount\)/);
+  assert.match(appSource, /activeListPaletteSourceColors=\[\.\.\.directColors\]/);
+  assert.match(appSource, /activeListPaletteDirect=Boolean\(options\.direct\)/);
+  assert.match(appSource, /applyListPaletteToAllThreeWindows\(activeListPaletteSourceColors,\{/);
+  assert.match(appSource, /preserveSource:true/);
+  assert.match(appSource, /Current palette resized to \$\{imagePaletteCount\} colors/);
 });
 
 test('app typography follows Huemint Roboto styling including controls', () => {
