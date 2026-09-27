@@ -1185,14 +1185,31 @@ body.goldenDialogDragging *{
 
 
 <style id="v12_133_palette_action_row">
+.paletteManageGrid{
+  display:grid;
+  gap:12px;
+}
+.paletteManageFields{
+  display:grid;
+  gap:6px;
+}
+.paletteManageFields label{
+  margin:0;
+}
+.paletteManageFields label:not(:first-child){
+  margin-top:6px!important;
+}
+.paletteManageActions{
+  display:grid;
+  gap:8px;
+}
 .paletteActionOneRow{
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 48px 48px;
   gap:8px;
   width:100%;
-  flex-wrap:nowrap;
 }
 .paletteActionOneRow button{
-  flex:1 1 0;
   min-width:0;
   white-space:nowrap;
 }
@@ -1202,14 +1219,48 @@ body.goldenDialogDragging *{
 }
 .paletteActionSecondaryRow{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:minmax(0,1fr) minmax(118px,.66fr);
   gap:8px;
   width:100%;
 }
+.paletteActionSecondaryRow.favorites-view{
+  grid-template-columns:1fr;
+}
+.paletteActionSecondaryRow #deletePalette[hidden]{
+  display:none!important;
+}
+#randomPalette{
+  font-weight:600;
+}
+#randomPaletteBack,#randomPaletteForward{
+  padding:0!important;
+  font-size:19px;
+  line-height:1;
+}
+#favoritePalette,#deletePalette{
+  min-height:40px;
+}
 #favoritePalette.is-saved{
-  background:#3f4143!important;
-  border-color:#3f4143!important;
+  background:#edf1ec!important;
+  border-color:#cbd5c8!important;
+  color:#354638!important;
+  box-shadow:0 0 0 1px rgba(72,92,70,.04) inset!important;
+}
+#favoritePalette.is-saved:hover{
+  background:#e4ebe2!important;
+  border-color:#bccab8!important;
+}
+#deletePalette{
+  background:#fbf8f7!important;
+  border-color:#e4d8d5!important;
+}
+#deletePalette:hover{
+  background:#963b35!important;
+  border-color:#963b35!important;
   color:#fff!important;
+}
+@media(max-width:430px){
+  .paletteActionSecondaryRow{grid-template-columns:1fr}
 }
 </style>
 
@@ -2674,8 +2725,8 @@ button{
     <button id="applySelected" class="secondary">Use selected palette</button>
     <div class="paletteActionOneRow">
       <button id="randomPalette" class="secondary">Random palette</button>
-      <button id="randomPaletteBack" class="secondary" type="button" disabled>← Back</button>
-      <button id="randomPaletteForward" class="secondary" type="button" disabled>Forward →</button>
+      <button id="randomPaletteBack" class="secondary" type="button" aria-label="Previous random palette" title="Previous random palette" disabled>←</button>
+      <button id="randomPaletteForward" class="secondary" type="button" aria-label="Next random palette" title="Next random palette" disabled>→</button>
     </div>
     <div class="paletteActionSecondaryRow">
       <button id="favoritePalette" class="secondary" type="button">☆ Save favorite</button>
@@ -4877,10 +4928,15 @@ function updatePaletteFavoriteButton(){
   if(!button) return;
   const item=selectedPaletteItem();
   const isSaved=Boolean(item && loadFavoritePaletteIds().has(paletteId(item)));
+  const browsingFavorites=$("categoryFilter")?.value===FAVORITE_PALETTES_FILTER;
+  const deleteButton=$("deletePalette");
+  const secondaryRow=button.closest(".paletteActionSecondaryRow");
   button.disabled=!item;
   button.classList.toggle("is-saved",isSaved);
   button.textContent=isSaved ? "★ Remove favorite" : "☆ Save favorite";
   button.setAttribute("aria-pressed",String(isSaved));
+  if(deleteButton) deleteButton.hidden=browsingFavorites;
+  secondaryRow?.classList.toggle("favorites-view",browsingFavorites);
 }
 
 function toggleSelectedPaletteFavorite(){
@@ -5027,7 +5083,7 @@ function populateCategoryFilter(){
   const favoriteCount=ALL_PALETTES.filter(item=>favoriteIds.has(paletteId(item))).length;
   const favoritesOpt=document.createElement("option");
   favoritesOpt.value=FAVORITE_PALETTES_FILTER;
-  favoritesOpt.textContent=`Favorites (${favoriteCount})`;
+  favoritesOpt.textContent=`★ Favorites (${favoriteCount})`;
   filter.appendChild(favoritesOpt);
 
   const colorGroup=document.createElement("optgroup");
