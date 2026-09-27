@@ -3585,7 +3585,7 @@ function buildMapForPaletteColors(colors, mode){
       M.set(c,p[j]);
     });
   }
-  return M;
+  return improveSpatialContrastBySwapping(M,{protectedSources:new Set(locked)});
 }
 
 
@@ -3868,7 +3868,8 @@ function closestCleanGoldenPerceptualOnly(targetRgb){
   );
 }
 
-const GOLDEN_SPATIAL_CONTRAST_DELTA_E=28;
+const GOLDEN_SPATIAL_CONTRAST_DELTA_E=36;
+const GOLDEN_SPATIAL_LIGHTNESS_GAP=14;
 const GOLDEN_SURFACE_CONTRAST_DELTA_E=22;
 const GOLDEN_SURFACE_LIGHTNESS_GAP=12;
 
@@ -3966,11 +3967,93 @@ function goldenSurfaceContrastIsLow(aHex,bHex){
   return delta<GOLDEN_SURFACE_CONTRAST_DELTA_E || lightnessGap<GOLDEN_SURFACE_LIGHTNESS_GAP;
 }
 
+function spatialContrastDeficit(aHex,bHex,type="surface"){
+  if(!aHex || !bHex) return 0;
+  const a=rgb(aHex), b=rgb(bHex);
+  const delta=deltaE76(a,b);
+  const lightnessGap=Math.abs(rgbToLabTuple(a)[0]-rgbToLabTuple(b)[0]);
+  const overlay=type==="overlay";
+  const deltaTarget=overlay ? GOLDEN_SPATIAL_CONTRAST_DELTA_E : GOLDEN_SURFACE_CONTRAST_DELTA_E;
+  const lightnessTarget=overlay ? GOLDEN_SPATIAL_LIGHTNESS_GAP : GOLDEN_SURFACE_LIGHTNESS_GAP;
+  const deltaDeficit=Math.max(0,deltaTarget-delta);
+  const lightnessDeficit=Math.max(0,lightnessTarget-lightnessGap);
+  return deltaDeficit*(overlay ? 2.4 : 1.25)+lightnessDeficit*(overlay ? 1.8 : .9);
+}
+
+function spatialContrastRelations(){
+  const relations=[];
+  const seen=new Set();
+  denseOverlayColorPairs().forEach(pair=>{
+    const key=`overlay|${pair.overlay}|${pair.background}`;
+    if(seen.has(key)) return;
+    seen.add(key);
+    relations.push({foreground:pair.overlay,background:pair.background,type:"overlay",weight:2.7});
+  });
+  adjacentSurfaceColorPairs().forEach(pair=>{
+    const key=`surface|${pair.foreground}|${pair.background}`;
+    if(seen.has(key)) return;
+    seen.add(key);
+    relations.push({...pair,type:"surface",weight:1});
+  });
+  return relations;
+}
+
+function spatialContrastPenalty(map,relations=spatialContrastRelations()){
+  return relations.reduce((total,relation)=>{
+    const foreground=map.get(relation.foreground)||relation.foreground;
+    const background=map.get(relation.background)||relation.background;
+    return total+spatialContrastDeficit(foreground,background,relation.type)*relation.weight;
+  },0);
+}
+
+function improveSpatialContrastBySwapping(map,options={}){
+  if(!map?.size) return map;
+  const relations=spatialContrastRelations();
+  if(!relations.length) return map;
+  const protectedSources=options.protectedSources || new Set();
+  const swappable=sourceColors.filter(source=>
+    map.has(source) && !locked.has(source) && !protectedSources.has(source)
+  );
+  if(swappable.length<2) return map;
+
+  // Keep the palette itself intact: only exchange existing color positions.
+  // A deterministic local search accepts a swap only when it reduces visible
+  // collisions among neighboring surfaces or dense foreground patterns.
+  const maxPasses=Math.min(12,swappable.length*2);
+  for(let pass=0;pass<maxPasses;pass++){
+    const baseline=spatialContrastPenalty(map,relations);
+    if(baseline<=.01) break;
+    let best=null;
+    for(let i=0;i<swappable.length;i++){
+      for(let j=i+1;j<swappable.length;j++){
+        const first=swappable[i], second=swappable[j];
+        const firstHex=map.get(first), secondHex=map.get(second);
+        if(!firstHex || !secondHex || firstHex===secondHex) continue;
+        map.set(first,secondHex);
+        map.set(second,firstHex);
+        const penalty=spatialContrastPenalty(map,relations);
+        map.set(first,firstHex);
+        map.set(second,secondHex);
+        const improvement=baseline-penalty;
+        if(improvement>.01 && (!best || improvement>best.improvement+.001)){
+          best={first,second,improvement};
+        }
+      }
+    }
+    if(!best) break;
+    const firstHex=map.get(best.first), secondHex=map.get(best.second);
+    map.set(best.first,secondHex);
+    map.set(best.second,firstHex);
+  }
+  return map;
+}
+
 function goldenContrastCandidate(targetHex,backgroundHex){
   const targetRgb=rgb(targetHex);
   const backgroundRgb=rgb(backgroundHex);
   const separated=GOLDEN_CLEAN_ONLY_COLORS.filter(color=>
-    deltaE76(color.rgb,backgroundRgb)>=GOLDEN_SPATIAL_CONTRAST_DELTA_E
+    deltaE76(color.rgb,backgroundRgb)>=GOLDEN_SPATIAL_CONTRAST_DELTA_E &&
+    Math.abs(rgbToLabTuple(color.rgb)[0]-rgbToLabTuple(backgroundRgb)[0])>=GOLDEN_SPATIAL_LIGHTNESS_GAP
   );
   const pool=separated.length ? separated : GOLDEN_CLEAN_ONLY_COLORS;
   return closestGoldenFromList(targetRgb,pool,"balanced",new Set());
@@ -3991,54 +4074,83 @@ function goldenSurfaceContrastCandidate(targetHex,backgroundHex){
   return closestGoldenFromList(targetRgb,pool.length ? pool : GOLDEN_CLEAN_ONLY_COLORS,"balanced",new Set());
 }
 
-function protectBalancedGoldenSpatialContrast(map,imageMap){
-  if(getGoldenMatchMode()!=="balanced" || !map?.size) return map;
+function syncGoldenPaletteSlotsFromMap(map){
+  let changed=false;
+  sourceColors.forEach((source,sourceIndex)=>{
+    const slot=getSourceSlotIndex(source,sourceIndex);
+    const hex=map.get(source);
+    if(slot<0 || !hex || manualGoldenOverrides.has(slot)) return;
+    if(automaticGoldenSlotHexes[slot]!==hex || goldenPreviewHexes[slot]!==hex){
+      automaticGoldenSlotHexes[slot]=hex;
+      goldenPreviewHexes[slot]=hex;
+      changed=true;
+    }
+  });
+  return changed;
+}
+
+function protectGoldenSpatialContrast(map,imageMap){
+  if(!map?.size) return map;
   let paletteRowChanged=false;
-  const changedSources=new Set();
-  denseOverlayColorPairs().forEach(pair=>{
-    if(locked.has(pair.overlay) || locked.has(pair.background)) return;
-    const overlayHex=map.get(pair.overlay);
-    const backgroundHex=map.get(pair.background);
-    if(!overlayHex || !backgroundHex) return;
-    if(deltaE76(rgb(overlayHex),rgb(backgroundHex))>=GOLDEN_SPATIAL_CONTRAST_DELTA_E) return;
-
-    const sourceIndex=sourceColors.indexOf(pair.overlay);
-    const slot=getSourceSlotIndex(pair.overlay,sourceIndex);
-    if(slot>=0 && manualGoldenOverrides.has(slot)) return;
-    const targetHex=(imageMap && imageMap.get(pair.overlay)) || pair.overlay;
-    const replacement=goldenContrastCandidate(targetHex,backgroundHex);
-    if(!replacement || replacement.hex===overlayHex) return;
-
-    map.set(pair.overlay,replacement.hex);
-    changedSources.add(pair.overlay);
-    if(slot>=0){
-      automaticGoldenSlotHexes[slot]=replacement.hex;
-      goldenPreviewHexes[slot]=replacement.hex;
-      paletteRowChanged=true;
-    }
+  const protectedSources=new Set(locked);
+  sourceColors.forEach((source,sourceIndex)=>{
+    const slot=getSourceSlotIndex(source,sourceIndex);
+    if(slot>=0 && manualGoldenOverrides.has(slot)) protectedSources.add(source);
   });
+  improveSpatialContrastBySwapping(map,{protectedSources});
 
-  adjacentSurfaceColorPairs().forEach(pair=>{
-    if(changedSources.has(pair.foreground) || locked.has(pair.foreground) || locked.has(pair.background)) return;
-    const foregroundHex=map.get(pair.foreground);
-    const backgroundHex=map.get(pair.background);
-    if(!foregroundHex || !backgroundHex || !goldenSurfaceContrastIsLow(foregroundHex,backgroundHex)) return;
+  // Re-run after each repair because fixing a large surface can expose a new
+  // low-contrast dot/background pair elsewhere in the same artwork.
+  for(let pass=0;pass<3;pass++){
+    let passChanged=false;
+    denseOverlayColorPairs().forEach(pair=>{
+      if(locked.has(pair.overlay) || locked.has(pair.background)) return;
+      const overlayHex=map.get(pair.overlay);
+      const backgroundHex=map.get(pair.background);
+      if(!overlayHex || !backgroundHex) return;
+      if(spatialContrastDeficit(overlayHex,backgroundHex,"overlay")<=0) return;
 
-    const sourceIndex=sourceColors.indexOf(pair.foreground);
-    const slot=getSourceSlotIndex(pair.foreground,sourceIndex);
-    if(slot>=0 && manualGoldenOverrides.has(slot)) return;
-    const targetHex=(imageMap && imageMap.get(pair.foreground)) || pair.foreground;
-    const replacement=goldenSurfaceContrastCandidate(targetHex,backgroundHex);
-    if(!replacement || replacement.hex===foregroundHex || goldenSurfaceContrastIsLow(replacement.hex,backgroundHex)) return;
+      const sourceIndex=sourceColors.indexOf(pair.overlay);
+      const slot=getSourceSlotIndex(pair.overlay,sourceIndex);
+      if(slot>=0 && manualGoldenOverrides.has(slot)) return;
+      const targetHex=(imageMap && imageMap.get(pair.overlay)) || pair.overlay;
+      const replacement=goldenContrastCandidate(targetHex,backgroundHex);
+      if(!replacement || replacement.hex===overlayHex) return;
 
-    map.set(pair.foreground,replacement.hex);
-    changedSources.add(pair.foreground);
-    if(slot>=0){
-      automaticGoldenSlotHexes[slot]=replacement.hex;
-      goldenPreviewHexes[slot]=replacement.hex;
-      paletteRowChanged=true;
-    }
-  });
+      map.set(pair.overlay,replacement.hex);
+      passChanged=true;
+      if(slot>=0){
+        automaticGoldenSlotHexes[slot]=replacement.hex;
+        goldenPreviewHexes[slot]=replacement.hex;
+        paletteRowChanged=true;
+      }
+    });
+
+    adjacentSurfaceColorPairs().forEach(pair=>{
+      if(locked.has(pair.foreground) || locked.has(pair.background)) return;
+      const foregroundHex=map.get(pair.foreground);
+      const backgroundHex=map.get(pair.background);
+      if(!foregroundHex || !backgroundHex || !goldenSurfaceContrastIsLow(foregroundHex,backgroundHex)) return;
+
+      const sourceIndex=sourceColors.indexOf(pair.foreground);
+      const slot=getSourceSlotIndex(pair.foreground,sourceIndex);
+      if(slot>=0 && manualGoldenOverrides.has(slot)) return;
+      const targetHex=(imageMap && imageMap.get(pair.foreground)) || pair.foreground;
+      const replacement=goldenSurfaceContrastCandidate(targetHex,backgroundHex);
+      if(!replacement || replacement.hex===foregroundHex || goldenSurfaceContrastIsLow(replacement.hex,backgroundHex)) return;
+
+      map.set(pair.foreground,replacement.hex);
+      passChanged=true;
+      if(slot>=0){
+        automaticGoldenSlotHexes[slot]=replacement.hex;
+        goldenPreviewHexes[slot]=replacement.hex;
+        paletteRowChanged=true;
+      }
+    });
+    improveSpatialContrastBySwapping(map,{protectedSources});
+    if(!passChanged) break;
+  }
+  paletteRowChanged=syncGoldenPaletteSlotsFromMap(map) || paletteRowChanged;
   if(paletteRowChanged) renderCurrentGoldenPaletteRow();
   return map;
 }
@@ -4065,7 +4177,7 @@ function buildCleanOnlyApproxMapFromImageMap(imageMap){
     M.set(src,hex);
   });
 
-  return protectBalancedGoldenSpatialContrast(M,imageMap);
+  return protectGoldenSpatialContrast(M,imageMap);
 }
 
 function refreshCleanOnlyArtwork(imageMapOverride=null){
@@ -4077,9 +4189,12 @@ function refreshCleanOnlyArtwork(imageMapOverride=null){
 
 function buildGoldenApproxMapFromImageMap(imageMap){
   const M=new Map();
+  const protectedSources=new Set(locked);
   locked.forEach(c=>M.set(c,c));
-  sourceColors.forEach(src=>{
+  sourceColors.forEach((src,sourceIndex)=>{
     if(locked.has(src)) return;
+    const slot=getSourceSlotIndex(src,sourceIndex);
+    if(slot>=0 && manualMixOverrides.has(slot)) protectedSources.add(src);
     const rightDst=(imageMap && imageMap.get(src)) || src;
     const g=closestGoldenFromList(
       rgb(rightDst),
@@ -4088,6 +4203,14 @@ function buildGoldenApproxMapFromImageMap(imageMap){
       new Set()
     );
     M.set(src, g ? g.hex : rightDst);
+  });
+  improveSpatialContrastBySwapping(M,{protectedSources});
+  sourceColors.forEach((source,sourceIndex)=>{
+    const slot=getSourceSlotIndex(source,sourceIndex);
+    const hex=M.get(source);
+    if(slot<0 || !hex || manualMixOverrides.has(slot)) return;
+    automaticMixSlotHexes[slot]=hex;
+    mixPreviewHexes[slot]=hex;
   });
   return M;
 }
