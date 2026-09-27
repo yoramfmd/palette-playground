@@ -2621,6 +2621,144 @@ button{
   color:#fff!important;
 }
 #paletteSection,#imageLibrarySection,#recolorSection{scroll-margin-top:62px}
+
+.recolorTargetSwitch{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  margin-top:12px;
+  padding:4px;
+  border:1px solid #d9d7d1;
+  border-radius:12px;
+  background:#efefec;
+}
+.recolorTargetSwitch button{
+  min-height:36px!important;
+  border:0!important;
+  background:transparent!important;
+  color:#687079!important;
+  box-shadow:none!important;
+}
+.recolorTargetSwitch button:hover{
+  background:#e4e4e0!important;
+  color:#30363b!important;
+  transform:none!important;
+}
+.recolorTargetSwitch button.is-active{
+  background:#fff!important;
+  color:#252b31!important;
+  box-shadow:0 1px 4px rgba(35,40,46,.12)!important;
+}
+.recolorControls{
+  display:grid;
+  grid-template-columns:42px minmax(150px,1fr) 42px;
+  gap:8px;
+  margin-top:10px;
+}
+.recolorControls .recolorArrow{
+  width:42px;
+  padding-inline:0!important;
+  font-size:17px!important;
+}
+#recolorShuffle{
+  background:#414345!important;
+  border-color:#414345!important;
+  color:#fff!important;
+}
+#recolorShuffle:hover{
+  background:#343638!important;
+  border-color:#343638!important;
+}
+.recolorHistoryStatus{
+  min-height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#70767c;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+}
+.recolorResetRow{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:4px;
+}
+.recolorMethodHelp{
+  margin:7px 2px 0;
+  color:#72787e;
+  font-size:10px;
+  line-height:1.4;
+}
+.toolbar{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "status upload"
+    "status actions";
+  align-items:start!important;
+  gap:8px 14px!important;
+}
+.toolbar .status{
+  grid-area:status;
+  min-width:0;
+  min-height:70px;
+  margin:0!important;
+  display:flex;
+  align-items:center;
+}
+#uploadSvgBtn{grid-area:upload;justify-self:end}
+.toolbarOutputActions{
+  grid-area:actions;
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+}
+.statusRich{
+  width:100%;
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:start!important;
+  gap:0 12px!important;
+}
+.statusLabel{
+  padding-top:3px;
+  white-space:nowrap;
+}
+.statusMappingList{
+  display:grid;
+  gap:3px;
+}
+.statusMappingRow{
+  position:relative;
+  display:grid;
+  grid-template-columns:16px 64px minmax(0,1fr);
+  align-items:center;
+  gap:7px;
+  min-height:20px;
+}
+.statusMappingRow+.statusMappingRow::before{
+  content:"↓";
+  position:absolute;
+  left:3px;
+  top:-9px;
+  color:#9299a1;
+  font-size:9px;
+}
+.statusMappingName{font-weight:700;color:#4d5867}
+.statusMappingValue{min-width:0;line-height:1.35}
+@media(max-width:820px){
+  .toolbar{
+    grid-template-columns:1fr;
+    grid-template-areas:"status" "upload" "actions";
+  }
+  #uploadSvgBtn,.toolbarOutputActions{justify-self:start}
+  .statusRich{grid-template-columns:1fr;gap:5px}
+  .statusLabel{padding-top:0}
+}
+@media(max-width:520px){
+  .recolorResetRow{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -2851,20 +2989,23 @@ button{
 <option value="order">Palette order</option>
 <option value="random">Random shuffle</option>
 </select>
-<div class="row">
-<button id="apply">Apply</button>
-<button id="goldenShuffle" class="secondary" title="Shuffle the GOLDEN clean-color artwork">GOLDEN Shuffle</button>
-<button id="goldenShuffleBack" class="secondary" title="Previous GOLDEN shuffle">← Back</button>
-<button id="goldenShuffleForward" class="secondary" title="Next GOLDEN shuffle">Forward →</button>
+<div id="recolorMethodHelp" class="recolorMethodHelp">Maps the lightest artwork color to the lightest palette color. Changes appear in the live preview.</div>
+<div class="recolorTargetSwitch" role="group" aria-label="Artwork to recolor">
+  <button id="recolorTargetGolden" type="button" class="is-active" aria-pressed="true">GOLDEN</button>
+  <button id="recolorTargetMix" type="button" aria-pressed="false">MIXES</button>
 </div>
-<div class="row" style="margin-top:8px">
-<button id="mixShuffle" class="secondary" title="Shuffle the MIXES artwork">MIX Shuffle</button>
-<button id="mixShuffleBack" class="secondary" title="Previous MIX shuffle">← Back</button>
-<button id="mixShuffleForward" class="secondary" title="Next MIX shuffle">Forward →</button>
-<button id="imageOriginal" class="secondary" title="Restore the original palette from the image currently marked with the black outline" disabled>↶ Image Original</button>
-<button id="restore" class="secondary" type="button" onclick="restore()">Restore original</button>
+<div class="recolorControls">
+  <button id="recolorBack" class="secondary recolorArrow" type="button" aria-label="Previous mapping" title="Previous mapping" disabled>←</button>
+  <button id="recolorShuffle" type="button">Try another mapping</button>
+  <button id="recolorForward" class="secondary recolorArrow" type="button" aria-label="Next mapping" title="Next mapping" disabled>→</button>
 </div>
-<div class="note hideClean">Hold <span class="hotkey">Space</span> anywhere outside a text field or dropdown to keep shuffling MIXES. <span id="shufflePulse">Shuffling…</span></div>
+<div id="recolorHistoryStatus" class="recolorHistoryStatus" role="status" aria-live="polite">Mapping 1 of 1 · GOLDEN</div>
+<div class="recolorResetRow">
+  <button id="resetActiveMapping" class="secondary" type="button">Reset mapping</button>
+  <button id="imageOriginal" class="secondary" title="Reload colors from the image currently marked with the black outline" disabled>Reset image colors</button>
+</div>
+<button id="apply" hidden>Apply</button>
+<span id="shufflePulse" hidden>Shuffling…</span>
 </section>
 
 <section class="sec">
@@ -2899,9 +3040,11 @@ button{
 <div id="status" class="status">Artwork loaded.</div>
 <input id="uploadSvgInput" type="file" accept=".svg,image/svg+xml" style="display:none">
 <button id="uploadSvgBtn" class="accent">Upload My SVG</button>
-<button id="fit" class="secondary" type="button" title="Fit all artwork previews">Fit artwork</button>
-<button id="exportSvg" class="secondary">Export SVG</button>
-<button id="exportPng" class="secondary">Export PNG</button>
+<div class="toolbarOutputActions">
+  <button id="fit" class="secondary" type="button" title="Fit all artwork previews">Fit artwork</button>
+  <button id="exportSvg" class="secondary">Export SVG</button>
+  <button id="exportPng" class="secondary">Export PNG</button>
+</div>
 </div>
 <div class="stage compareStage">
   <div class="artPane" data-art-pane="original">
@@ -3175,6 +3318,7 @@ let activeGoldenEditIndex=-1;
 let activePaletteEditKind="golden";
 let shuffleHistory=[], shuffleHistoryIndex=-1; // MIXES history
 let goldenShuffleHistory=[], goldenShuffleHistoryIndex=-1;
+let activeRecolorTarget="golden";
 let imageOriginalMap=null;
 let highlightedSource=null;
 const highlightBackup=new WeakMap();
@@ -6020,17 +6164,68 @@ function cloneColorMap(M){
 }
 
 function updateShuffleHistoryButtons(){
-  const back=$("mixShuffleBack"), forward=$("mixShuffleForward");
-  if(back) back.disabled = shuffleHistoryIndex <= 0;
-  if(forward) forward.disabled = shuffleHistoryIndex < 0 || shuffleHistoryIndex >= shuffleHistory.length-1;
+  updateRecolorControls();
 }
 
 function updateGoldenShuffleHistoryButtons(){
-  const back=$("goldenShuffleBack"), forward=$("goldenShuffleForward");
-  if(back) back.disabled = goldenShuffleHistoryIndex <= 0;
-  if(forward) forward.disabled =
-    goldenShuffleHistoryIndex < 0 ||
-    goldenShuffleHistoryIndex >= goldenShuffleHistory.length-1;
+  updateRecolorControls();
+}
+
+function activeRecolorHistoryState(){
+  if(activeRecolorTarget==="golden"){
+    return {history:goldenShuffleHistory,index:goldenShuffleHistoryIndex,label:"GOLDEN"};
+  }
+  return {history:shuffleHistory,index:shuffleHistoryIndex,label:"MIXES"};
+}
+
+function updateRecolorControls(){
+  const state=activeRecolorHistoryState();
+  const back=$("recolorBack"), forward=$("recolorForward"), status=$("recolorHistoryStatus");
+  if(back) back.disabled=state.index<=0;
+  if(forward) forward.disabled=state.index<0 || state.index>=state.history.length-1;
+  if(status){
+    const current=state.index<0 ? 1 : state.index+1;
+    const total=state.history.length || 1;
+    status.textContent=`Mapping ${current} of ${total} · ${state.label}`;
+  }
+}
+
+function setRecolorTarget(kind){
+  activeRecolorTarget=kind==="mix" ? "mix" : "golden";
+  const golden=$("recolorTargetGolden"), mix=$("recolorTargetMix");
+  const goldenActive=activeRecolorTarget==="golden";
+  if(golden){
+    golden.classList.toggle("is-active",goldenActive);
+    golden.setAttribute("aria-pressed",String(goldenActive));
+  }
+  if(mix){
+    mix.classList.toggle("is-active",!goldenActive);
+    mix.setAttribute("aria-pressed",String(!goldenActive));
+  }
+  setActivePaletteGroup(activeRecolorTarget);
+  updateRecolorControls();
+}
+
+function resetActiveRecolorMapping(){
+  if(activeRecolorTarget==="golden"){
+    if(!goldenShuffleHistory.length){
+      $("status").textContent="GOLDEN mapping is already at its first state.";
+      return;
+    }
+    goldenShuffleHistoryIndex=0;
+    renderGoldenShuffleMap(cloneColorMap(goldenShuffleHistory[0]));
+    updateGoldenShuffleHistoryButtons();
+    $("status").textContent="GOLDEN returned to its first mapping.";
+    return;
+  }
+  if(!shuffleHistory.length){
+    $("status").textContent="MIXES mapping is already at its first state.";
+    return;
+  }
+  shuffleHistoryIndex=0;
+  applyMap(cloneColorMap(shuffleHistory[0]),{keepShuffleHistory:true});
+  updateShuffleHistoryButtons();
+  $("status").textContent="MIXES returned to its first mapping.";
 }
 
 function resetShuffleHistory(){
@@ -6323,11 +6518,11 @@ function renderHighlightedStatus(originalHex,cleanOnlyHex,combinedHex,cleanInfo,
   status.innerHTML = `
     <span class="statusRich">
       <span class="statusLabel">Highlighted mapping:</span>
-      <span class="statusGroup"><span class="statusSwatch" style="background:${rightHex}"></span><span>ORIGINAL: ${hexToRgbText(rightHex)}</span></span>
-      <span class="statusArrow">→</span>
-      <span class="statusGroup"><span class="statusSwatch" style="background:${middleHex}"></span><span>GOLDEN: ${cleanName} · ${hexToRgbText(middleHex)}</span></span>
-      <span class="statusArrow">→</span>
-      <span class="statusGroup"><span class="statusSwatch" style="background:${leftHex}"></span><span>MIXES: ${combinedName} · ${hexToRgbText(leftHex)}</span></span>
+      <span class="statusMappingList">
+        <span class="statusMappingRow"><span class="statusSwatch" style="background:${rightHex}"></span><span class="statusMappingName">ORIGINAL</span><span class="statusMappingValue">${hexToRgbText(rightHex)}</span></span>
+        <span class="statusMappingRow"><span class="statusSwatch" style="background:${middleHex}"></span><span class="statusMappingName">GOLDEN</span><span class="statusMappingValue">${cleanName} · ${hexToRgbText(middleHex)}</span></span>
+        <span class="statusMappingRow"><span class="statusSwatch" style="background:${leftHex}"></span><span class="statusMappingName">MIXES</span><span class="statusMappingValue">${combinedName} · ${hexToRgbText(leftHex)}</span></span>
+      </span>
     </span>`;
 }
 
@@ -9287,6 +9482,13 @@ document.addEventListener("keydown",e=>{
 
 $("mode").onchange=()=>{
   const mode=$("mode").value;
+  const help={
+    light:"Maps the lightest artwork color to the lightest palette color. Changes appear in the live preview.",
+    hue:"Matches each artwork color to the closest palette hue. Changes appear in the live preview.",
+    order:"Assigns palette colors in their current order. Changes appear in the live preview.",
+    random:"Creates a new random assignment from the current palette. Changes appear in the live preview."
+  };
+  if($("recolorMethodHelp")) $("recolorMethodHelp").textContent=help[mode]||help.light;
 
   // Keep the CURRENT palette colors exactly as they are.
   // Only change how those colors are assigned to artwork regions.
@@ -9311,22 +9513,32 @@ $("mode").onchange=()=>{
   // A new mapping method starts a fresh shuffle history,
   // but does NOT change either palette row.
   resetShuffleHistory();
+  resetGoldenShuffleHistory();
 
   $("status").textContent="Mapping method changed. Current palette colors were kept.";
 };
 $("apply").onclick=()=>applyMap(buildMap($("mode").value));
 
-$("goldenShuffle").onclick=()=>{setActivePaletteGroup("golden");goldenShuffleOnce();};
-$("goldenShuffleBack").onclick=()=>{setActivePaletteGroup("golden");moveGoldenShuffleHistory(-1);};
-$("goldenShuffleForward").onclick=()=>{setActivePaletteGroup("golden");moveGoldenShuffleHistory(1);};
-
-$("mixShuffle").onclick=()=>{setActivePaletteGroup("mix");shuffleOnce();};
-$("mixShuffleBack").onclick=()=>{setActivePaletteGroup("mix");moveShuffleHistory(-1);};
-$("mixShuffleForward").onclick=()=>{setActivePaletteGroup("mix");moveShuffleHistory(1);};
+$("recolorTargetGolden").onclick=()=>setRecolorTarget("golden");
+$("recolorTargetMix").onclick=()=>setRecolorTarget("mix");
+$("recolorShuffle").onclick=()=>{
+  if(activeRecolorTarget==="golden") goldenShuffleOnce();
+  else shuffleOnce();
+};
+$("recolorBack").onclick=()=>{
+  if(activeRecolorTarget==="golden") moveGoldenShuffleHistory(-1);
+  else moveShuffleHistory(-1);
+};
+$("recolorForward").onclick=()=>{
+  if(activeRecolorTarget==="golden") moveGoldenShuffleHistory(1);
+  else moveShuffleHistory(1);
+};
+$("resetActiveMapping").onclick=resetActiveRecolorMapping;
 
 $("imageOriginal").onclick=returnToImageOriginal;
 updateShuffleHistoryButtons();
 updateGoldenShuffleHistoryButtons();
+setRecolorTarget("golden");
 $("exportSvg").onclick=exportSvg;
 $("exportPng").onclick=exportPng;
 

@@ -211,6 +211,24 @@ test('image workflow provides persistent navigation and accessible artwork contr
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
+test('recolor controls use one target-aware history and readable mapping rows', () => {
+  assert.match(appSource, /id="recolorTargetGolden"[^>]*aria-pressed="true"/);
+  assert.match(appSource, /id="recolorTargetMix"[^>]*aria-pressed="false"/);
+  assert.match(appSource, /id="recolorBack"[^>]*aria-label="Previous mapping"/);
+  assert.match(appSource, /id="recolorShuffle"[^>]*>Try another mapping<\/button>/);
+  assert.match(appSource, /id="recolorForward"[^>]*aria-label="Next mapping"/);
+  assert.match(appSource, /id="recolorHistoryStatus"[^>]*aria-live="polite"/);
+  assert.match(appSource, /function setRecolorTarget\(kind\)/);
+  assert.match(appSource, /function resetActiveRecolorMapping\(\)/);
+  assert.match(appSource, /Mapping \$\{current\} of \$\{total\} · \$\{state\.label\}/);
+  assert.match(appSource, /class="statusMappingRow"[^>]*>.*ORIGINAL/s);
+  assert.match(appSource, /class="statusMappingRow"[^>]*>.*GOLDEN/s);
+  assert.match(appSource, /class="statusMappingRow"[^>]*>.*MIXES/s);
+  assert.match(appSource, /grid-template-columns:16px 64px minmax\(0,1fr\)/);
+  assert.doesNotMatch(appSource, /id="goldenShuffle"/);
+  assert.doesNotMatch(appSource, /id="mixShuffle"/);
+});
+
 test('duplicate scanner offers a near-exact default without automatic deletion', () => {
   assert.match(appSource, /<option value="veryStrict" selected>Very strict · near-exact<\/option>/);
   assert.match(appSource, /metrics\.meanDiff<=2\.2/);
