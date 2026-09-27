@@ -2529,22 +2529,25 @@ button{
   <div class="imagePaletteMeta" id="imagePaletteMeta">Use Add images in Image Library to add one or many images.</div>
 <label style="margin-top:10px">Image palette mode</label>
   <select id="imagePaletteMode">
-    <option value="original" selected>Original</option>
-    <option value="keyColors">Key Colors</option>
+    <option value="original" selected>Dominant Colors</option>
+    <option value="keyColors">Distinct Key Colors</option>
   </select>
 <label style="margin-top:10px">GOLDEN + MIXES matching mode</label>
   <select id="goldenMatchMode">
-    <option value="original" selected>Original</option>
-    <option value="contrastBold">Contrast / Bold</option>
-    <option value="lightnessFirst">Lightness First</option>
-    <option value="hueLightness">Hue + Lightness</option>
-    <option value="warmCoolPreserve">Warm / Cool Preserve</option>
-    <option value="mutedMuseum">Muted / Museum</option>
-    <option value="perceptualOnly">Perceptual only</option>
-    <option value="balanced">Balanced (Delta E)</option>
-    <option value="strictHue">Strict hue</option>
-    <option value="sameFamily">Same family</option>
-    <option value="closestRgb">Closest RGB</option>
+    <optgroup label="Recommended">
+      <option value="original" selected>Original</option>
+      <option value="balanced">Balanced</option>
+      <option value="contrastBold">Contrast / Bold</option>
+      <option value="lightnessFirst">Lightness First</option>
+      <option value="warmCoolPreserve">Warm / Cool Preserve</option>
+      <option value="mutedMuseum">Muted / Museum</option>
+    </optgroup>
+    <optgroup label="Advanced">
+      <option value="hueLightness">Hue + Lightness</option>
+      <option value="strictHue">Strict Hue</option>
+      <option value="sameFamily">Same Family</option>
+      <option value="closestRgb">Closest RGB</option>
+    </optgroup>
   </select>
 
   <div class="paletteMatrixHeading">
@@ -5700,7 +5703,7 @@ function applyImagePalette(){
   matchCurrentImagePaletteToGolden();
 
   $("imagePaletteValue").textContent=String(imagePaletteCount);
-  const modeLabel=getImagePaletteMode()==="keyColors" ? "Key Colors" : "Original";
+  const modeLabel=getImagePaletteMode()==="keyColors" ? "Distinct Key Colors" : "Dominant Colors";
   $("imagePaletteMeta").textContent=
     `${imagePaletteFileName || "Image"} · ${imagePaletteHexes.length} colors · ${modeLabel}`;
 

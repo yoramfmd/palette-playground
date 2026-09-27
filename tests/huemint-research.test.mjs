@@ -179,6 +179,15 @@ test('palette matrix aligns roles and exposes RGB values without HEX UI', () => 
   assert.doesNotMatch(appSource, /paletteMatrixReadoutText[^\n]*HEX/i);
 });
 
+test('palette matching controls remove the duplicate mode and group advanced choices', () => {
+  assert.match(appSource, /<option value="original" selected>Dominant Colors<\/option>/);
+  assert.match(appSource, /<option value="keyColors">Distinct Key Colors<\/option>/);
+  assert.match(appSource, /<optgroup label="Recommended">/);
+  assert.match(appSource, /<optgroup label="Advanced">/);
+  assert.doesNotMatch(appSource, /<option value="perceptualOnly">/);
+  assert.match(appSource, /mode==="original" \|\| mode==="perceptualOnly"/);
+});
+
 test('catalog covers every Huemint navigation template', () => {
   assert.equal(HUEMINT_TEMPLATE_CATALOG.length, 27);
   assert.deepEqual([...new Set(HUEMINT_TEMPLATE_CATALOG.map(item => item.category))], [
