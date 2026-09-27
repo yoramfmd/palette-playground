@@ -1996,6 +1996,7 @@ button{touch-action:manipulation;}
 .huemintLocalActions button{min-height:38px}
 .huemintLocalFilters{display:grid;grid-template-columns:1fr 1.35fr;gap:10px}
 .huemintLocalFilters>div{display:grid;gap:6px;min-width:0}
+.huemintLocalMode{display:grid;gap:6px}
 .huemintLocalStrip{display:grid;grid-template-columns:repeat(4,1fr);width:100%;height:58px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
 .huemintLocalStrip span{display:block;min-width:0}
 .huemintLocalStrip.compact{height:34px;border-radius:8px}
@@ -2091,6 +2092,15 @@ button{touch-action:manipulation;}
         <label for="huemintLocalTemplate">Template</label>
         <select id="huemintLocalTemplate"></select>
       </div>
+    </div>
+    <div class="huemintLocalMode">
+      <label for="huemintLocalMode">Generation style</label>
+      <select id="huemintLocalMode">
+        <option value="creative" selected>Creative · varied hues</option>
+        <option value="balanced">Balanced · controlled harmony</option>
+        <option value="bold">Bold · strong contrast</option>
+        <option value="any">Any · explore the collection</option>
+      </select>
     </div>
     <div id="huemintLocalPalette" aria-label="Current Huemint palette"></div>
     <div class="huemintLocalActions">

@@ -110,6 +110,7 @@ test('local engine returns real corpus colors deterministically without synthesi
 
 test('research preview uses only the captured local corpus', () => {
   assert.match(appSource, /id="huemintLocalGenerate"/);
+  assert.match(appSource, /id="huemintLocalMode"/);
   assert.match(appSource, /js\/huemint-corpus\.js/);
   assert.match(appSource, /js\/huemint-generator\.js/);
   assert.match(browserCorpusSource, /window\.HUEMINT_LOCAL_CORPUS/);
@@ -122,6 +123,10 @@ test('research preview uses only the captured local corpus', () => {
   assert.match(generatorSource, /\{ direct: true \}/);
   assert.match(appSource, /options\.direct && directColors\.length/);
   assert.match(generatorSource, /palettePlaygroundHuemintFavoritesV1/);
+  assert.match(generatorSource, /function qualityScore/);
+  assert.match(generatorSource, /function paletteDistance/);
+  assert.match(generatorSource, /function chooseNextRecord/);
+  assert.match(generatorSource, /creative: 'Creative'/);
   assert.match(generatorSource, /function removeFavorite/);
   assert.match(appSource, /max-height:184px;overflow-y:auto/);
   assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);

@@ -13,10 +13,18 @@
   const favoritesBox = document.getElementById('huemintLocalFavorites');
   const categorySelect = document.getElementById('huemintLocalCategory');
   const templateSelect = document.getElementById('huemintLocalTemplate');
+  const modeSelect = document.getElementById('huemintLocalMode');
   const note = document.getElementById('huemintLocalNote');
-  let currentIndex = 0;
   let activeCorpus = [];
   let currentRecord = null;
+  let recentIds = [];
+
+  const modeLabels = {
+    creative: 'Creative',
+    balanced: 'Balanced',
+    bold: 'Bold',
+    any: 'Any'
+  };
 
   function templateLabel(template) {
     return catalog.find(item => item.slug === template)?.label || template;
@@ -38,6 +46,90 @@
       });
     }
     return Array.from({ length: target }, (_, index) => colors[index % colors.length]);
+  }
+
+  function hexToHsl(hex) {
+    const value = String(hex).replace('#', '');
+    const r = parseInt(value.slice(0, 2), 16) / 255;
+    const g = parseInt(value.slice(2, 4), 16) / 255;
+    const b = parseInt(value.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+    const lightness = (max + min) / 2;
+    let hue = 0;
+    if (delta) {
+      if (max === r) hue = ((g - b) / delta) % 6;
+      else if (max === g) hue = (b - r) / delta + 2;
+      else hue = (r - g) / delta + 4;
+      hue = (hue * 60 + 360) % 360;
+    }
+    const saturation = delta ? delta / (1 - Math.abs(2 * lightness - 1)) : 0;
+    return { hue, saturation, lightness };
+  }
+
+  function paletteMetrics(colors) {
+    const values = colors.map(hexToHsl);
+    const chromatic = values.filter(value => value.saturation > 0.08);
+    const mean = (list, key) => list.reduce((sum, value) => sum + value[key], 0) / Math.max(1, list.length);
+    const range = (list, key) => Math.max(...list.map(value => value[key])) - Math.min(...list.map(value => value[key]));
+    let hueSpread = 0;
+    chromatic.forEach((left, index) => chromatic.slice(index + 1).forEach(right => {
+      const distance = Math.abs(left.hue - right.hue);
+      hueSpread = Math.max(hueSpread, Math.min(distance, 360 - distance) / 180);
+    }));
+    return {
+      averageSaturation: mean(values, 'saturation'),
+      saturationRange: range(values, 'saturation'),
+      lightnessRange: range(values, 'lightness'),
+      hueSpread,
+      neutralRatio: 1 - chromatic.length / Math.max(1, values.length)
+    };
+  }
+
+  function paletteDistance(left, right) {
+    if (!left || !right) return 1;
+    const parse = hex => [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16));
+    const rightRgb = right.colors.map(parse);
+    const distances = left.colors.map(color => {
+      const rgb = parse(color);
+      return Math.min(...rightRgb.map(candidate => Math.hypot(
+        rgb[0] - candidate[0], rgb[1] - candidate[1], rgb[2] - candidate[2]
+      ) / 441.673));
+    });
+    return distances.reduce((sum, distance) => sum + distance, 0) / Math.max(1, distances.length);
+  }
+
+  function qualityScore(record, mode) {
+    const metrics = paletteMetrics(record.colors);
+    if (mode === 'bold') {
+      return metrics.lightnessRange * 0.45 + metrics.averageSaturation * 0.35 + metrics.hueSpread * 0.2;
+    }
+    if (mode === 'balanced') {
+      const saturationBalance = 1 - Math.min(1, Math.abs(metrics.averageSaturation - 0.52) / 0.52);
+      const lightnessBalance = 1 - Math.min(1, Math.abs(metrics.lightnessRange - 0.58) / 0.58);
+      return saturationBalance * 0.35 + lightnessBalance * 0.35 + metrics.hueSpread * 0.2 + metrics.neutralRatio * 0.1;
+    }
+    if (mode === 'creative') {
+      return metrics.hueSpread * 0.42 + metrics.averageSaturation * 0.22 + metrics.saturationRange * 0.16 + metrics.lightnessRange * 0.2;
+    }
+    return 0.5;
+  }
+
+  function chooseNextRecord() {
+    const unseen = activeCorpus.filter(record => !recentIds.includes(record.id));
+    const candidates = unseen.length ? unseen : activeCorpus.filter(record => record.id !== currentRecord?.id);
+    const pool = candidates.length ? candidates : activeCorpus;
+    const mode = modeSelect.value;
+    return pool.slice().sort((left, right) => {
+      const leftScore = qualityScore(left, mode) + paletteDistance(left, currentRecord) * 0.38;
+      const rightScore = qualityScore(right, mode) + paletteDistance(right, currentRecord) * 0.38;
+      return rightScore - leftScore || left.id.localeCompare(right.id);
+    })[0] || null;
+  }
+
+  function rememberRecord(record) {
+    recentIds = [...recentIds.filter(id => id !== record.id), record.id].slice(-4);
   }
 
   function readFavorites() {
@@ -79,7 +171,10 @@
     if (typeof window.applyListPaletteToAllThreeWindows === 'function') {
       window.applyListPaletteToAllThreeWindows(directPaletteForSlots(record.colors), { direct: true });
     }
-    status.textContent = message || `Applied ${categoryForTemplate(record.template)} · ${templateLabel(record.template)} · direct colors`;
+    rememberRecord(record);
+    const source = `${categoryForTemplate(record.template)} · ${templateLabel(record.template)}`;
+    status.textContent = message || `Applied ${modeLabels[modeSelect.value]} selection · ${source}`;
+    note.textContent = `${record.colors.length} original Huemint colors · ${source} · no gradients or interpolation.`;
   }
 
   function renderFavorites() {
@@ -148,7 +243,7 @@
 
   function selectTemplate() {
     activeCorpus = corpus.filter(record => record.template === templateSelect.value);
-    currentIndex = 0;
+    recentIds = [];
     currentRecord = activeCorpus[0] || null;
     if (!currentRecord) {
       strip.replaceChildren();
@@ -158,8 +253,8 @@
       return;
     }
     strip.replaceChildren(makeStrip(currentRecord.colors));
-    status.textContent = `${activeCorpus.length} real ${categoryForTemplate(templateSelect.value)} · ${templateLabel(templateSelect.value)} palettes available locally`;
-    note.textContent = `Direct mode uses only the ${currentRecord.colors.length} original Huemint colors. For artwork with more slots, colors repeat without gradients or interpolation.`;
+    status.textContent = `${activeCorpus.length} real ${categoryForTemplate(templateSelect.value)} · ${templateLabel(templateSelect.value)} palettes · ${modeLabels[modeSelect.value]} ranking ready`;
+    note.textContent = `${currentRecord.colors.length} original Huemint colors · no gradients or interpolation.`;
     generateButton.disabled = false;
     saveButton.disabled = false;
   }
@@ -174,10 +269,13 @@
     selectTemplate();
   });
   templateSelect.addEventListener('change', selectTemplate);
+  modeSelect.addEventListener('change', () => {
+    recentIds = currentRecord ? [currentRecord.id] : [];
+    status.textContent = `${modeLabels[modeSelect.value]} ranking ready · ${activeCorpus.length} real palettes in this template`;
+  });
 
   generateButton.addEventListener('click', () => {
-    applyRecord(activeCorpus[currentIndex]);
-    currentIndex = (currentIndex + 1) % activeCorpus.length;
+    applyRecord(chooseNextRecord());
   });
 
   saveButton.addEventListener('click', () => {
