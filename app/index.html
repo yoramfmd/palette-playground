@@ -3323,6 +3323,8 @@ let imageOriginalMap=null;
 let highlightedSource=null;
 const highlightBackup=new WeakMap();
 let nodeSourceColor=new WeakMap();
+let shuffleSpatialRelationsCache=null;
+const shuffleColorLabCache=new Map();
 let shuffleTimer=null;
 let spaceHeld=false;
 
@@ -3930,6 +3932,7 @@ function hasAuthoredFill(node){
 function scan(){
   refs.clear();
   nodeSourceColor=new WeakMap();
+  shuffleSpatialRelationsCache=null;
 
   // Only elements that can visibly carry a fill in the artwork.
   const paintSelector="path,rect,circle,ellipse,polygon,polyline,text,tspan,use";
@@ -7472,7 +7475,172 @@ function currentCleanOnlyMap(){
   return M;
 }
 
-function shuffleMapFromCurrentMap(currentMap){
+function shuffledCopy(values){
+  const out=[...values];
+  for(let i=out.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [out[i],out[j]]=[out[j],out[i]];
+  }
+  return out;
+}
+
+function artworkBoxInRootSpace(node){
+  try{
+    const box=node.getBBox();
+    if(!box || box.width<=0 || box.height<=0) return null;
+    const nodeMatrix=node.getCTM && node.getCTM();
+    const rootMatrix=svg && svg.getCTM && svg.getCTM();
+    if(!nodeMatrix || !rootMatrix || typeof DOMPoint==="undefined"){
+      return {x:box.x,y:box.y,width:box.width,height:box.height};
+    }
+    const matrix=rootMatrix.inverse().multiply(nodeMatrix);
+    const points=[
+      new DOMPoint(box.x,box.y),
+      new DOMPoint(box.x+box.width,box.y),
+      new DOMPoint(box.x,box.y+box.height),
+      new DOMPoint(box.x+box.width,box.y+box.height)
+    ].map(point=>point.matrixTransform(matrix));
+    const xs=points.map(point=>point.x), ys=points.map(point=>point.y);
+    const x=Math.min(...xs), y=Math.min(...ys);
+    return {x,y,width:Math.max(...xs)-x,height:Math.max(...ys)-y};
+  }catch(_){
+    return null;
+  }
+}
+
+function boxArea(box){
+  return box ? Math.max(0,box.width)*Math.max(0,box.height) : 0;
+}
+
+function boxIntersectionArea(a,b){
+  const width=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x));
+  const height=Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+  return width*height;
+}
+
+function boxGap(a,b){
+  const dx=Math.max(a.x-(b.x+b.width),b.x-(a.x+a.width),0);
+  const dy=Math.max(a.y-(b.y+b.height),b.y-(a.y+a.height),0);
+  return Math.hypot(dx,dy);
+}
+
+function boxContainsCenter(outer,inner){
+  const x=inner.x+inner.width/2, y=inner.y+inner.height/2;
+  return x>=outer.x && x<=outer.x+outer.width && y>=outer.y && y<=outer.y+outer.height;
+}
+
+function buildShuffleSpatialRelations(){
+  if(shuffleSpatialRelationsCache) return shuffleSpatialRelationsCache;
+  const entries=[];
+  refs.forEach((nodes,source)=>{
+    nodes.forEach(node=>{
+      const box=artworkBoxInRootSpace(node);
+      if(box && boxArea(box)>0) entries.push({source,box});
+    });
+  });
+
+  const viewBox=svg && svg.viewBox && svg.viewBox.baseVal;
+  const rootSpan=Math.max(
+    1,
+    viewBox && viewBox.width ? viewBox.width : 0,
+    viewBox && viewBox.height ? viewBox.height : 0,
+    ...entries.map(entry=>Math.max(entry.box.width,entry.box.height))
+  );
+  const relationByPair=new Map();
+
+  for(let i=0;i<entries.length;i++){
+    for(let j=i+1;j<entries.length;j++){
+      const a=entries[i], b=entries[j];
+      if(a.source===b.source) continue;
+      const areaA=boxArea(a.box), areaB=boxArea(b.box);
+      const smaller=Math.min(areaA,areaB);
+      if(smaller<=0) continue;
+      const overlap=boxIntersectionArea(a.box,b.box);
+      const overlapRatio=overlap/smaller;
+      const sizeRatio=smaller/Math.max(areaA,areaB);
+      const contained=(
+        (boxContainsCenter(a.box,b.box) || boxContainsCenter(b.box,a.box)) &&
+        sizeRatio<0.72 && overlapRatio>0.45
+      ) || overlapRatio>0.82;
+      const gap=boxGap(a.box,b.box);
+      const nearLimit=Math.max(rootSpan*0.014,Math.min(a.box.width,a.box.height,b.box.width,b.box.height)*0.18);
+      let type="", weight=0;
+      if(contained){
+        type="containment";
+        weight=3.2+Math.min(1.3,overlapRatio);
+      }else if(overlapRatio>0.12){
+        type="overlap";
+        weight=2.25+Math.min(1,overlapRatio);
+      }else if(gap<=nearLimit){
+        type="adjacent";
+        weight=1.15+(1-Math.min(1,gap/Math.max(nearLimit,0.001)))*0.75;
+      }else{
+        continue;
+      }
+
+      const pair=[a.source,b.source].sort();
+      const key=pair.join("|");
+      const existing=relationByPair.get(key);
+      if(!existing || weight>existing.weight){
+        relationByPair.set(key,{a:pair[0],b:pair[1],type,weight});
+      }
+    }
+  }
+
+  shuffleSpatialRelationsCache=[...relationByPair.values()];
+  return shuffleSpatialRelationsCache;
+}
+
+function shuffleLab(hex){
+  const key=String(hex||"").toUpperCase();
+  if(!shuffleColorLabCache.has(key)) shuffleColorLabCache.set(key,rgbToLabTuple(hexToRgbTuple(key)));
+  return shuffleColorLabCache.get(key);
+}
+
+function shuffleLabDistance(aHex,bHex){
+  const [l1,a1,b1]=shuffleLab(aHex), [l2,a2,b2]=shuffleLab(bHex);
+  const dl=l1-l2, da=a1-a2, db=b1-b2;
+  return {deltaE:Math.hypot(dl,da,db),deltaL:Math.abs(dl)};
+}
+
+function shuffleMapDifference(a,b){
+  if(!a || !b) return Infinity;
+  let difference=0;
+  sourceColors.forEach(source=>{
+    if(String(a.get(source)||"").toUpperCase()!==String(b.get(source)||"").toUpperCase()) difference++;
+  });
+  return difference;
+}
+
+function scoreHarmonicShuffleMap(map,history=[]){
+  let score=0;
+  const relations=buildShuffleSpatialRelations();
+  relations.forEach(relation=>{
+    const first=map.get(relation.a)||relation.a;
+    const second=map.get(relation.b)||relation.b;
+    const {deltaE,deltaL}=shuffleLabDistance(first,second);
+    const strong=relation.type==="containment";
+    const desired=strong ? 48 : 34;
+    const minimum=strong ? 20 : 14;
+    score+=relation.weight*Math.min(deltaE,desired);
+    if(deltaE<minimum) score-=relation.weight*(minimum-deltaE)*7;
+    if(strong){
+      score+=relation.weight*Math.min(deltaL,34)*0.9;
+      if(deltaL<8) score-=relation.weight*(8-deltaL)*5;
+    }
+    if(!strong && deltaE>82) score-=(deltaE-82)*relation.weight*0.28;
+  });
+
+  if(history.length){
+    const minimumDifference=Math.min(...history.map(previous=>shuffleMapDifference(map,previous)));
+    if(minimumDifference===0) return -Infinity;
+    score+=minimumDifference*5;
+    if(minimumDifference<3) score-=(3-minimumDifference)*65;
+  }
+  return score;
+}
+
+function shuffleMapFromCurrentMap(currentMap,history=[]){
   const sources=[...sourceColors];
   if(!sources.length) return new Map();
 
@@ -7482,24 +7650,23 @@ function shuffleMapFromCurrentMap(currentMap){
 
   if(!colors.length) return new Map(currentMap ? [...currentMap.entries()] : []);
 
-  // Shuffle colors and positions independently so every currently visible
-  // color remains represented before any reuse is needed.
-  for(let i=colors.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [colors[i],colors[j]]=[colors[j],colors[i]];
+  // Shuffle remains surprising, but no longer accepts the first random result.
+  // It samples many complete permutations and keeps the strongest spatially
+  // harmonious one: nested shapes need foreground/background contrast, nearby
+  // shapes should not disappear into one another, and recent maps are avoided.
+  const candidateCount=Math.max(72,Math.min(180,sources.length*16));
+  let bestMap=null, bestScore=-Infinity;
+  for(let attempt=0;attempt<candidateCount;attempt++){
+    const candidateColors=shuffledCopy(colors);
+    const candidate=new Map();
+    sources.forEach((source,index)=>candidate.set(source,candidateColors[index%candidateColors.length]));
+    const score=scoreHarmonicShuffleMap(candidate,history);
+    if(score>bestScore){
+      bestScore=score;
+      bestMap=candidate;
+    }
   }
-
-  const shuffledSources=[...sources];
-  for(let i=shuffledSources.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [shuffledSources[i],shuffledSources[j]]=[shuffledSources[j],shuffledSources[i]];
-  }
-
-  const M=new Map();
-  shuffledSources.forEach((src,i)=>{
-    M.set(src,colors[i % colors.length]);
-  });
-  return M;
+  return bestMap || new Map(currentMap ? [...currentMap.entries()] : []);
 }
 
 function renderGoldenShuffleMap(M){
@@ -7521,7 +7688,7 @@ function goldenShuffleOnce(){
   }
 
   const base=currentCleanOnlyMap();
-  const nextMap=shuffleMapFromCurrentMap(base);
+  const nextMap=shuffleMapFromCurrentMap(base,goldenShuffleHistory);
   goldenShuffleHistory.push(cloneColorMap(nextMap));
 
   if(goldenShuffleHistory.length>120){
@@ -7561,7 +7728,7 @@ function buildShuffleMapUsingAllGoldenColors(){
   // MIX shuffle works from the colors actually visible in the left MIXES pane.
   // This preserves the current selected/matched colors and only changes where
   // they appear in the artwork.
-  return shuffleMapFromCurrentMap(lastMap);
+  return shuffleMapFromCurrentMap(lastMap,shuffleHistory);
 }
 
 

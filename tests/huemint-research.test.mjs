@@ -229,6 +229,19 @@ test('recolor controls use one target-aware history and readable mapping rows', 
   assert.doesNotMatch(appSource, /id="mixShuffle"/);
 });
 
+test('shuffle ranks spatially harmonious and novel permutations only', () => {
+  assert.match(appSource, /function buildShuffleSpatialRelations\(\)/);
+  assert.match(appSource, /type="containment"/);
+  assert.match(appSource, /type="adjacent"/);
+  assert.match(appSource, /function scoreHarmonicShuffleMap\(map,history=\[\]\)/);
+  assert.match(appSource, /if\(deltaE<minimum\) score-=/);
+  assert.match(appSource, /if\(deltaL<8\) score-=/);
+  assert.match(appSource, /if\(minimumDifference===0\) return -Infinity/);
+  assert.match(appSource, /const candidateCount=Math\.max\(72,Math\.min\(180,sources\.length\*16\)\)/);
+  assert.match(appSource, /shuffleMapFromCurrentMap\(base,goldenShuffleHistory\)/);
+  assert.match(appSource, /shuffleMapFromCurrentMap\(lastMap,shuffleHistory\)/);
+});
+
 test('duplicate scanner offers a near-exact default without automatic deletion', () => {
   assert.match(appSource, /<option value="veryStrict" selected>Very strict · near-exact<\/option>/);
   assert.match(appSource, /metrics\.meanDiff<=2\.2/);
