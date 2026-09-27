@@ -168,15 +168,15 @@ test('design polish keeps layout responsive and interaction state local', () => 
   assert.doesNotMatch(appSource, /indexedDB\.deleteDatabase/);
 });
 
-test('palette matrix aligns roles and exposes RGB values without HEX UI', () => {
+test('palette matrix aligns roles and exposes RGB values without a persistent readout', () => {
   assert.match(appSource, /id="paletteMatrixV1Styles"/);
   assert.match(appSource, /class="paletteMatrixNumbers"/);
   assert.match(appSource, /Same color role in each column/);
-  assert.match(appSource, /id="paletteMatrixReadoutText"/);
-  assert.match(appSource, /id="paletteMatrixCopy"[^>]*>Copy RGB<\/button>/);
   assert.match(appSource, /function paletteMatrixRgbText\(hex\)/);
   assert.match(appSource, /return `RGB \$\{r\}, \$\{g\}, \$\{b\}`/);
-  assert.doesNotMatch(appSource, /paletteMatrixReadoutText[^\n]*HEX/i);
+  assert.match(appSource, /sw\.setAttribute\("aria-label"/);
+  assert.doesNotMatch(appSource, /id="paletteMatrixReadoutText"/);
+  assert.doesNotMatch(appSource, /id="paletteMatrixCopy"/);
 });
 
 test('palette matching controls remove the duplicate mode and group advanced choices', () => {

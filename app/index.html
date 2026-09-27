@@ -2459,34 +2459,6 @@ button{
   border-radius:9px!important;
   font-size:16px!important;
 }
-.paletteMatrixReadout{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  min-height:42px;
-  margin-top:8px;
-  padding:8px 9px 8px 12px;
-  border:1px solid #e1dfda;
-  border-radius:10px;
-  background:#f8f7f4;
-}
-#paletteMatrixReadoutText{
-  min-width:0;
-  color:#4f555c;
-  font-size:11px;
-  font-variant-numeric:tabular-nums;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#paletteMatrixCopy{
-  min-height:32px;
-  padding:6px 10px;
-  border-radius:8px!important;
-  font-size:10px;
-  white-space:nowrap;
-}
 @media(max-width:520px){
   .imagePaletteTop{align-items:flex-start;flex-direction:column}
 }
@@ -2580,10 +2552,6 @@ button{
         </div>
       </div>
     </div>
-  </div>
-  <div class="paletteMatrixReadout" aria-live="polite">
-    <span id="paletteMatrixReadoutText">Point to a color to see its RGB value.</span>
-    <button id="paletteMatrixCopy" class="secondary" type="button" disabled>Copy RGB</button>
   </div>
 
   <section class="huemintResearchBox" aria-labelledby="huemintLocalTitle">
@@ -4316,36 +4284,12 @@ function clearPaletteMatrixPreview(){
     .forEach(el=>el.classList.remove("is-preview-column"));
 }
 
-function showPaletteMatrixRgb(slot,kind,hex){
+function highlightPaletteMatrixColumn(slot){
   clearPaletteMatrixPreview();
   document.querySelectorAll(".comparePaletteRow").forEach(row=>{
     row.children[slot]?.classList.add("is-preview-column");
   });
   document.querySelectorAll(".paletteMatrixNumbers span")[slot]?.classList.add("is-preview-column");
-
-  const label=kind==="image" ? "ORIGINAL" : kind==="golden" ? "GOLDEN" : "MIXES";
-  const value=paletteMatrixRgbText(hex);
-  const readout=$("paletteMatrixReadoutText");
-  const copy=$("paletteMatrixCopy");
-  if(readout) readout.textContent=`${label} · Color ${slot+1} · ${value}`;
-  if(copy){
-    copy.disabled=!value;
-    copy.dataset.rgb=value;
-    copy.dataset.label=`${label} color ${slot+1}`;
-  }
-}
-
-async function copyPaletteMatrixRgb(){
-  const copy=$("paletteMatrixCopy");
-  const value=copy?.dataset.rgb||"";
-  if(!value) return;
-  try{
-    await navigator.clipboard.writeText(value);
-    const label=copy.dataset.label||"Color";
-    $("paletteMatrixReadoutText").textContent=`${label} · ${value} · Copied`;
-  }catch(_){
-    $("paletteMatrixReadoutText").textContent=`${value} · Select and copy manually`;
-  }
 }
 
 function renderComparePaletteRow(hostId, colors, kind){
@@ -4374,8 +4318,8 @@ function renderComparePaletteRow(hostId, colors, kind){
       sw.style.background=hex;
       const rgbValue=paletteMatrixRgbText(hex);
       sw.setAttribute("aria-label",`${kind==="image" ? "Original" : kind==="golden" ? "GOLDEN" : "MIXES"} color ${i+1}, ${rgbValue}`);
-      sw.addEventListener("pointerenter",()=>showPaletteMatrixRgb(i,kind,hex));
-      sw.addEventListener("focus",()=>showPaletteMatrixRgb(i,kind,hex));
+      sw.addEventListener("pointerenter",()=>highlightPaletteMatrixColumn(i));
+      sw.addEventListener("focus",()=>highlightPaletteMatrixColumn(i));
       const editable=(kind==="golden" || kind==="mix");
       if(editable){
         item.classList.add("isGoldenEditable");
@@ -10105,7 +10049,6 @@ function duplicateScannerRender(exactGroups,similarGroups,similarScores){
   });
   if(panes.length) activate(panes[panes.length-1]);
 
-  document.getElementById("paletteMatrixCopy")?.addEventListener("click",copyPaletteMatrixRgb);
   document.querySelector(".paletteMatrixViewport")?.addEventListener("pointerleave",clearPaletteMatrixPreview);
 })();
 </script>
