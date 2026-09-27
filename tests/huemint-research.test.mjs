@@ -328,6 +328,18 @@ test('palette matching controls remove the duplicate mode and group advanced cho
   assert.match(appSource, /mode==="original" \|\| mode==="perceptualOnly"/);
 });
 
+test('balanced GOLDEN mapping protects dense overlay contrast using catalog colors only', () => {
+  assert.match(appSource, /const GOLDEN_SPATIAL_CONTRAST_DELTA_E=28/);
+  assert.match(appSource, /function denseOverlayColorPairs\(\)/);
+  assert.match(appSource, /item\.tag==="circle" \|\| item\.tag==="ellipse"/);
+  assert.match(appSource, /pair\.count>=6/);
+  assert.match(appSource, /function protectBalancedGoldenSpatialContrast\(map,imageMap\)/);
+  assert.match(appSource, /getGoldenMatchMode\(\)!=="balanced"/);
+  assert.match(appSource, /GOLDEN_CLEAN_ONLY_COLORS\.filter/);
+  assert.match(appSource, /map\.set\(pair\.overlay,replacement\.hex\)/);
+  assert.doesNotMatch(appSource, /replacement\.rgb\s*=/);
+});
+
 test('palette list favorites are additive, local, and filterable', () => {
   assert.match(appSource, /id="favoritePalette"[^>]*>☆ Save favorite<\/button>/);
   assert.match(appSource, /palettePlaygroundListFavoritesV1/);
