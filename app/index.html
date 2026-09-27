@@ -1992,8 +1992,15 @@ button{touch-action:manipulation;}
 .huemintResearchTitle{font-weight:850;letter-spacing:.08em;text-transform:uppercase}
 .huemintResearchSub,.huemintLocalStatus,.huemintLocalNote{font-size:11px;line-height:1.4;color:#77736e}
 .huemintResearchBadge{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:99px;background:#e8f3ec;color:#326347;white-space:nowrap}
-.huemintLocalActions{display:flex;gap:8px;flex-wrap:wrap}
-.huemintLocalActions button{min-height:38px}
+.huemintLocalActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.huemintLocalActions button{min-height:46px;border-radius:7px}
+#huemintLocalGenerate{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:0 18px;background:#444!important;color:#fff!important;border:1px solid #444!important;border-radius:7px!important;box-shadow:0 7px 16px rgba(0,0,0,.12)!important}
+#huemintLocalGenerate:hover{background:#363636!important;border-color:#363636!important}
+#huemintLocalGenerate::after{content:"→";font-size:21px;font-weight:400;line-height:1}
+#huemintLocalBack,#huemintLocalForward{width:46px;padding:0;border:1px solid #dfe4e8!important;background:#fff!important;color:#858585!important;border-radius:7px!important;box-shadow:none!important;font-size:22px;font-weight:400;line-height:1}
+#huemintLocalBack:hover:not(:disabled),#huemintLocalForward:hover:not(:disabled){background:#f6f7f7!important;border-color:#cfd5da!important;color:#555!important}
+#huemintLocalBack:disabled,#huemintLocalForward:disabled{background:#fff!important;color:#aaa!important;border-color:#e3e7ea!important;opacity:.55!important}
+#huemintLocalSaveFavorite{padding-inline:16px;border-radius:7px}
 .huemintLocalFilters{display:grid;grid-template-columns:1fr 1.35fr;gap:10px}
 .huemintLocalFilters>div{display:grid;gap:6px;min-width:0}
 .huemintLocalMode{display:grid;gap:6px}
@@ -2006,6 +2013,83 @@ button{touch-action:manipulation;}
 .huemintLocalDelete{position:absolute;top:-5px;right:-5px;width:23px;height:23px;min-height:0;padding:0;border:1px solid #c9c5bf;border-radius:50%;background:#fff;color:#5f5b56;font-size:16px;line-height:20px;box-shadow:0 1px 4px rgba(0,0,0,.16);cursor:pointer;opacity:.88}
 .huemintLocalDelete:hover,.huemintLocalDelete:focus-visible{background:#8b2929;border-color:#8b2929;color:#fff;opacity:1}
 .huemintLocalEmpty{grid-column:1/-1;padding:10px;border:1px dashed #d8d5ce;border-radius:10px;text-align:center;font-size:11px;color:#8a8781}
+</style>
+
+<style id="huemintTypographyStyles">
+@font-face{
+  font-family:"Roboto";
+  src:url("fonts/Roboto-Regular.ttf") format("truetype");
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+}
+@font-face{
+  font-family:"Roboto";
+  src:url("fonts/Roboto-Medium.ttf") format("truetype");
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+}
+@font-face{
+  font-family:"Roboto";
+  src:url("fonts/Roboto-SemiBold.ttf") format("truetype");
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+}
+:root{
+  --huemint-font:Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+html,body,
+button,input,select,textarea,option{
+  font-family:var(--huemint-font);
+  font-synthesis:weight;
+}
+body{
+  font-weight:400;
+  line-height:1.5;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+}
+button,
+.huemintLocalActions button,
+#goldenReplaceActions button{
+  font-family:var(--huemint-font);
+  font-size:13px;
+  font-weight:500;
+  line-height:1.5;
+  letter-spacing:0;
+}
+input,select,textarea,option,
+input::placeholder,textarea::placeholder{
+  font-family:var(--huemint-font);
+  font-weight:400;
+  line-height:1.5;
+  letter-spacing:0;
+}
+input::placeholder,textarea::placeholder{
+  opacity:.62;
+}
+label,.mapHeader,.hotkey,.zoomValue,.imagePaletteCount,#lightnessValue{
+  font-weight:500;
+}
+h1,h2,h3,h4,h5,h6,
+.tt,.artPaneTitle,.comparePaletteLabel,.huemintResearchTitle,
+.duplicateScannerTitle,#goldenReplaceTitle{
+  font-family:var(--huemint-font);
+  font-weight:600;
+}
+.tt,.artPaneTitle,.comparePaletteLabel,.huemintResearchTitle{
+  letter-spacing:.06em;
+}
+.huemintResearchBadge{
+  font-family:var(--huemint-font);
+  font-weight:600;
+}
+.rgbCell,#imagePaletteValue,.paletteRgbCode{
+  font-family:var(--huemint-font);
+  font-variant-numeric:tabular-nums;
+}
 </style>
 </head>
 <body>
@@ -2104,9 +2188,9 @@ button{touch-action:manipulation;}
     </div>
     <div id="huemintLocalPalette" aria-label="Current Huemint palette"></div>
     <div class="huemintLocalActions">
+      <button id="huemintLocalBack" class="secondary" type="button" aria-label="Previous palette" title="Previous palette" disabled>←</button>
       <button id="huemintLocalGenerate" type="button">Generate</button>
-      <button id="huemintLocalBack" class="secondary" type="button" disabled>← Back</button>
-      <button id="huemintLocalForward" class="secondary" type="button" disabled>Forward →</button>
+      <button id="huemintLocalForward" class="secondary" type="button" aria-label="Next palette" title="Next palette" disabled>→</button>
       <button id="huemintLocalSaveFavorite" class="secondary" type="button">Save favorite</button>
     </div>
     <div id="huemintLocalStatus" class="huemintLocalStatus">Loading local palettes…</div>

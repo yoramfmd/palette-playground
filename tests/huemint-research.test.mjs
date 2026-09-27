@@ -136,6 +136,25 @@ test('research preview uses only the captured local corpus', () => {
   assert.doesNotMatch(generatorSource, /indexedDB\.deleteDatabase/);
 });
 
+test('app typography follows Huemint Roboto styling including controls', () => {
+  assert.match(appSource, /id="huemintTypographyStyles"/);
+  assert.match(appSource, /--huemint-font:Roboto/);
+  assert.match(appSource, /url\("fonts\/Roboto-Regular\.ttf"\)/);
+  assert.match(appSource, /url\("fonts\/Roboto-Medium\.ttf"\)/);
+  assert.match(appSource, /url\("fonts\/Roboto-SemiBold\.ttf"\)/);
+  assert.match(appSource, /button,input,select,textarea,option/);
+  assert.match(appSource, /input::placeholder,textarea::placeholder/);
+  assert.match(appSource, /font-weight:500/);
+  assert.match(appSource, /font-weight:600/);
+});
+
+test('local palette controls follow Huemint button treatment', () => {
+  assert.match(appSource, /#huemintLocalGenerate::after\{content:"→"/);
+  assert.match(appSource, /#huemintLocalBack,#huemintLocalForward\{width:46px/);
+  assert.match(appSource, /id="huemintLocalBack"[^>]+aria-label="Previous palette"[^>]*>←<\/button>/);
+  assert.match(appSource, /id="huemintLocalForward"[^>]+aria-label="Next palette"[^>]*>→<\/button>/);
+});
+
 test('catalog covers every Huemint navigation template', () => {
   assert.equal(HUEMINT_TEMPLATE_CATALOG.length, 27);
   assert.deepEqual([...new Set(HUEMINT_TEMPLATE_CATALOG.map(item => item.category))], [
